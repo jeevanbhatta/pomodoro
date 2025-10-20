@@ -378,19 +378,21 @@ function loadSettings() {
         settings = { ...settings, ...JSON.parse(saved) };
     }
 
-    // Apply settings to UI
-    document.getElementById('workDuration').value = settings.workDuration;
-    document.getElementById('breakDuration').value = settings.breakDuration;
-    document.getElementById('longBreakDuration').value = settings.longBreakDuration;
-    document.getElementById('sessionsBeforeLongBreak').value = settings.sessionsBeforeLongBreak;
-    document.getElementById('soundEnabled').checked = settings.soundEnabled;
-    document.getElementById('musicEnabled').checked = settings.musicEnabled;
-    document.getElementById('musicSelect').value = settings.musicTrack;
-    document.getElementById('volumeSlider').value = settings.volume;
-    document.getElementById('volumeValue').textContent = settings.volume + '%';
-    document.getElementById('musicControls').style.display = settings.musicEnabled ? 'block' : 'none';
-    document.getElementById('autoStartBreaks').checked = settings.autoStartBreaks;
-    document.getElementById('autoStartWork').checked = settings.autoStartWork;
+    // Apply settings to UI - with null checks
+    const elem = (id) => document.getElementById(id);
+    
+    if (elem('workDuration')) elem('workDuration').value = settings.workDuration;
+    if (elem('breakDuration')) elem('breakDuration').value = settings.breakDuration;
+    if (elem('longBreakDuration')) elem('longBreakDuration').value = settings.longBreakDuration;
+    if (elem('sessionsBeforeLongBreak')) elem('sessionsBeforeLongBreak').value = settings.sessionsBeforeLongBreak;
+    if (elem('soundEnabled')) elem('soundEnabled').checked = settings.soundEnabled;
+    if (elem('musicEnabled')) elem('musicEnabled').checked = settings.musicEnabled;
+    if (elem('musicSelect')) elem('musicSelect').value = settings.musicTrack;
+    if (elem('volumeSlider')) elem('volumeSlider').value = settings.volume;
+    if (elem('volumeValue')) elem('volumeValue').textContent = settings.volume + '%';
+    if (elem('musicControls')) elem('musicControls').style.display = settings.musicEnabled ? 'block' : 'none';
+    if (elem('autoStartBreaks')) elem('autoStartBreaks').checked = settings.autoStartBreaks;
+    if (elem('autoStartWork')) elem('autoStartWork').checked = settings.autoStartWork;
 
     // Update music button state
     updateMusicButtonState();
@@ -554,6 +556,8 @@ function toggleTheme() {
 
 function toggleMusicButton() {
     const musicEnabled = document.getElementById('musicEnabled');
+    if (!musicEnabled) return;
+    
     musicEnabled.checked = !musicEnabled.checked;
     
     // Trigger change event to update controls
@@ -564,7 +568,10 @@ function toggleMusicButton() {
 }
 
 function updateMusicButtonState() {
-    const musicEnabled = document.getElementById('musicEnabled').checked;
+    const musicEnabledEl = document.getElementById('musicEnabled');
+    if (!musicEnabledEl || !musicBtn) return;
+    
+    const musicEnabled = musicEnabledEl.checked;
     if (musicEnabled) {
         musicBtn.classList.add('active');
     } else {
