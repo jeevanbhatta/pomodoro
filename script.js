@@ -36,6 +36,7 @@ const modeBtns = document.querySelectorAll('.mode-btn');
 const timerPresetSelect = document.getElementById('timerPreset');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 const themeBtn = document.getElementById('themeBtn');
+const musicBtn = document.getElementById('musicBtn');
 const settingsToggle = document.getElementById('settingsToggle');
 const settingsContent = document.getElementById('settingsContent');
 const saveSettingsBtn = document.getElementById('saveSettings');
@@ -105,6 +106,7 @@ function setupEventListeners() {
     skipBtn.addEventListener('click', skipSession);
     fullscreenBtn.addEventListener('click', toggleFullscreen);
     themeBtn.addEventListener('click', toggleTheme);
+    musicBtn.addEventListener('click', toggleMusicButton);
     
     modeBtns.forEach(btn => {
         btn.addEventListener('click', () => switchMode(btn.dataset.mode));
@@ -390,6 +392,9 @@ function loadSettings() {
     document.getElementById('autoStartBreaks').checked = settings.autoStartBreaks;
     document.getElementById('autoStartWork').checked = settings.autoStartWork;
 
+    // Update music button state
+    updateMusicButtonState();
+
     // Set initial time
     timerState.timeRemaining = settings.workDuration * 60;
     timerState.totalTime = settings.workDuration * 60;
@@ -488,12 +493,11 @@ function stopMusic() {
 }
 
 function playCompletionAlert() {
-    // Play notification sound 3 times
-    for (let i = 0; i < 3; i++) {
-        setTimeout(() => {
-            notificationSound.currentTime = 0;
-            notificationSound.play().catch(e => console.log('Could not play sound:', e));
-        }, i * 400);
+    // Play notification sound once with gentle reminder
+    if (notificationSound) {
+        notificationSound.volume = 0.3; // Set to 30% volume for gentle reminder
+        notificationSound.currentTime = 0;
+        notificationSound.play().catch(e => console.log('Could not play sound:', e));
     }
 }
 
@@ -546,6 +550,26 @@ function toggleTheme() {
     document.body.classList.toggle('light-theme');
     const isLight = document.body.classList.contains('light-theme');
     localStorage.setItem('pomodoroTheme', isLight ? 'light' : 'dark');
+}
+
+function toggleMusicButton() {
+    const musicEnabled = document.getElementById('musicEnabled');
+    musicEnabled.checked = !musicEnabled.checked;
+    
+    // Trigger change event to update controls
+    musicEnabled.dispatchEvent(new Event('change'));
+    
+    // Update button visual state
+    updateMusicButtonState();
+}
+
+function updateMusicButtonState() {
+    const musicEnabled = document.getElementById('musicEnabled').checked;
+    if (musicEnabled) {
+        musicBtn.classList.add('active');
+    } else {
+        musicBtn.classList.remove('active');
+    }
 }
 
 // Load theme preference
