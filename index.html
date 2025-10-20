@@ -24,6 +24,19 @@
                 <button class="mode-btn" data-mode="long-break">Long Break</button>
             </div>
 
+            <!-- Quick Timer Presets -->
+            <div class="presets-container">
+                <label for="timerPreset">Quick Presets:</label>
+                <select id="timerPreset">
+                    <option value="">Custom</option>
+                    <option value="25-5-15">Classic (25/5/15)</option>
+                    <option value="50-10-30">Extended (50/10/30)</option>
+                    <option value="15-3-10">Short (15/3/10)</option>
+                    <option value="45-15-30">Deep Work (45/15/30)</option>
+                    <option value="30-5-20">Balanced (30/5/20)</option>
+                </select>
+            </div>
+
             <!-- Circular Timer Visualization -->
             <div class="timer-container">
                 <svg class="progress-ring" width="350" height="350">
@@ -75,6 +88,27 @@
                     </svg>
                     Reset
                 </button>
+                <button class="control-btn" id="skipBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                        <line x1="19" y1="5" x2="19" y2="19"></line>
+                    </svg>
+                    Skip
+                </button>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="action-btn" id="fullscreenBtn" title="Fullscreen Mode">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                    </svg>
+                </button>
+                <button class="action-btn" id="themeBtn" title="Toggle Theme">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
             </div>
 
             <!-- Settings Panel -->
@@ -110,6 +144,20 @@
                         <input type="number" id="sessionsBeforeLongBreak" min="2" max="10" value="4">
                     </div>
 
+                    <div class="setting-group">
+                        <label>
+                            <input type="checkbox" id="autoStartBreaks">
+                            Auto-start Breaks
+                        </label>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>
+                            <input type="checkbox" id="autoStartWork">
+                            Auto-start Work Sessions
+                        </label>
+                    </div>
+
                     <h3>Audio Settings</h3>
 
                     <div class="setting-group">
@@ -129,16 +177,19 @@
                     <div class="setting-group" id="musicControls" style="display: none;">
                         <label for="musicSelect">Music Track</label>
                         <select id="musicSelect">
-                            <option value="lofi">Lo-fi Beats</option>
-                            <option value="nature">Nature Sounds</option>
-                            <option value="ambient">Ambient Music</option>
-                            <option value="piano">Piano Melodies</option>
+                            <option value="rain">Rain Sounds</option>
+                            <option value="forest">Forest Ambience</option>
+                            <option value="ocean">Ocean Waves</option>
+                            <option value="cafe">Coffee Shop</option>
+                            <option value="whitenoise">White Noise</option>
+                            <option value="fire">Fireplace</option>
                         </select>
                         <div class="volume-control">
                             <label for="volumeSlider">Volume</label>
                             <input type="range" id="volumeSlider" min="0" max="100" value="50">
                             <span id="volumeValue">50%</span>
                         </div>
+                        <p class="music-note">🎵 Background sounds use free audio loops</p>
                     </div>
 
                     <button class="save-settings-btn" id="saveSettings">Save Settings</button>
