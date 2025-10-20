@@ -19,7 +19,7 @@ let settings = {
     sessionsBeforeLongBreak: 4,
     soundEnabled: true,
     musicEnabled: false,
-    musicTrack: 'rain',
+    musicTrack: 'lofi',
     volume: 50,
     autoStartBreaks: false,
     autoStartWork: false
@@ -55,37 +55,23 @@ progressRing.style.strokeDashoffset = 0;
 let audioPlayer = null;
 let isPlayingMusic = false;
 
-// Ambient sound URLs (free, royalty-free sources)
+// Ambient sound URLs - using local files
 const musicTracks = {
-    rain: {
-        url: 'https://assets.mixkit.co/active_storage/sfx/2378/2378-preview.mp3',
-        description: 'Rain Sounds',
-        fallback: 'https://assets.mixkit.co/active_storage/sfx/2379/2379-preview.mp3'
+    lofi: {
+        url: './songs/close-study-relax-chillhop-calm-study-lofi-123089.mp3',
+        description: 'Lo-fi Study',
     },
-    forest: {
-        url: 'https://assets.mixkit.co/active_storage/sfx/2382/2382-preview.mp3',
-        description: 'Forest Ambience',
-        fallback: 'https://assets.mixkit.co/active_storage/sfx/2383/2383-preview.mp3'
+    nature: {
+        url: './songs/nature-walk-124997.mp3',
+        description: 'Nature Walk',
     },
-    ocean: {
-        url: 'https://assets.mixkit.co/active_storage/sfx/2385/2385-preview.mp3',
-        description: 'Ocean Waves',
-        fallback: 'https://assets.mixkit.co/active_storage/sfx/2386/2386-preview.mp3'
+    ambient: {
+        url: './songs/perfect-beauty-191271.mp3',
+        description: 'Ambient Beauty',
     },
-    cafe: {
-        url: 'https://assets.mixkit.co/active_storage/sfx/2388/2388-preview.mp3',
-        description: 'Coffee Shop',
-        fallback: 'https://assets.mixkit.co/active_storage/sfx/2389/2389-preview.mp3'
-    },
-    whitenoise: {
-        url: 'https://assets.mixkit.co/active_storage/sfx/2391/2391-preview.mp3',
-        description: 'White Noise',
-        fallback: 'https://assets.mixkit.co/active_storage/sfx/2392/2392-preview.mp3'
-    },
-    fire: {
-        url: 'https://assets.mixkit.co/active_storage/sfx/2394/2394-preview.mp3',
-        description: 'Fireplace',
-        fallback: 'https://assets.mixkit.co/active_storage/sfx/2395/2395-preview.mp3'
+    study: {
+        url: './songs/study-110111.mp3',
+        description: 'Study Focus',
     }
 };
 
@@ -443,7 +429,12 @@ function playMusic() {
 
     try {
         const trackConfig = musicTracks[settings.musicTrack];
-        console.log(`Playing ${trackConfig.description} at ${settings.volume}% volume`);
+        if (!trackConfig) {
+            console.log('Track not found:', settings.musicTrack);
+            return;
+        }
+        
+        console.log(`Playing ${trackConfig.description} at ${settings.volume}% volume from: ${trackConfig.url}`);
         
         // Create audio player
         audioPlayer = new Audio();
@@ -454,19 +445,18 @@ function playMusic() {
         
         // Add error handler
         audioPlayer.addEventListener('error', (e) => {
-            console.log('Audio error with primary URL, trying fallback:', e);
-            audioPlayer.src = trackConfig.fallback;
-            audioPlayer.play().catch(err => console.log('Fallback also failed:', err));
+            console.log('Audio error:', e);
+            console.log('Could not load:', trackConfig.url);
         });
         
         // Try to play
         const playPromise = audioPlayer.play();
         if (playPromise !== undefined) {
-            playPromise.catch(error => {
+            playPromise.then(() => {
+                console.log('Music started playing successfully');
+                isPlayingMusic = true;
+            }).catch(error => {
                 console.log('Could not play music:', error);
-                // Try fallback URL
-                audioPlayer.src = trackConfig.fallback;
-                audioPlayer.play().catch(e => console.log('Fallback also failed:', e));
             });
         }
         
