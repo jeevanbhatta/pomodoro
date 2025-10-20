@@ -19,8 +19,10 @@ let settings = {
     sessionsBeforeLongBreak: 4,
     soundEnabled: true,
     musicEnabled: false,
-    musicTrack: 'lofi',
-    volume: 50
+    musicTrack: 'rain',
+    volume: 50,
+    autoStartBreaks: false,
+    autoStartWork: false
 };
 
 // DOM Elements
@@ -29,7 +31,11 @@ const sessionCountDisplay = document.getElementById('sessionCount');
 const startBtn = document.getElementById('startBtn');
 const pauseBtn = document.getElementById('pauseBtn');
 const resetBtn = document.getElementById('resetBtn');
+const skipBtn = document.getElementById('skipBtn');
 const modeBtns = document.querySelectorAll('.mode-btn');
+const timerPresetSelect = document.getElementById('timerPreset');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const themeBtn = document.getElementById('themeBtn');
 const settingsToggle = document.getElementById('settingsToggle');
 const settingsContent = document.getElementById('settingsContent');
 const saveSettingsBtn = document.getElementById('saveSettings');
@@ -44,13 +50,20 @@ const progressRingCircumference = 2 * Math.PI * progressRingRadius;
 progressRing.style.strokeDasharray = `${progressRingCircumference} ${progressRingCircumference}`;
 progressRing.style.strokeDashoffset = 0;
 
-// Music Player (using YouTube embedded audio or local files)
-let musicPlayer = null;
-let musicTracks = {
-    lofi: 'https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&loop=1&playlist=jfKfPfyJRdk',
-    nature: 'https://www.youtube.com/embed/eKFTSSKCzWA?autoplay=1&loop=1&playlist=eKFTSSKCzWA',
-    ambient: 'https://www.youtube.com/embed/l7TxwBhtNEU?autoplay=1&loop=1&playlist=l7TxwBhtNEU',
-    piano: 'https://www.youtube.com/embed/3jWRrafhO7M?autoplay=1&loop=1&playlist=3jWRrafhO7M'
+// Audio Context for background music
+let audioContext = null;
+let musicSource = null;
+let gainNode = null;
+let isPlayingMusic = false;
+
+// Ambient sound configurations
+const musicTracks = {
+    rain: { frequency: 100, type: 'noise', description: 'Rain Sounds' },
+    forest: { frequency: 150, type: 'noise', description: 'Forest Ambience' },
+    ocean: { frequency: 80, type: 'noise', description: 'Ocean Waves' },
+    cafe: { frequency: 200, type: 'noise', description: 'Coffee Shop' },
+    whitenoise: { frequency: 440, type: 'noise', description: 'White Noise' },
+    fire: { frequency: 120, type: 'noise', description: 'Fireplace' }
 };
 
 // Initialize
@@ -60,13 +73,26 @@ document.addEventListener('DOMContentLoaded', () => {
     updateProgressRing();
     setupEventListeners();
     loadStats();
+    initAudioContext();
 });
+
+// Initialize Audio Context
+function initAudioContext() {
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+        console.log('Web Audio API not supported');
+    }
+}
 
 // Event Listeners
 function setupEventListeners() {
     startBtn.addEventListener('click', startTimer);
     pauseBtn.addEventListener('click', pauseTimer);
     resetBtn.addEventListener('click', resetTimer);
+    skipBtn.addEventListener('click', skipSession);
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    themeBtn.addEventListener('click', toggleTheme);
     
     modeBtns.forEach(btn => {
         btn.addEventListener('click', () => switchMode(btn.dataset.mode));
@@ -74,6 +100,7 @@ function setupEventListeners() {
 
     settingsToggle.addEventListener('click', toggleSettings);
     saveSettingsBtn.addEventListener('click', saveSettings);
+    timerPresetSelect.addEventListener('change', applyPreset);
 
     // Settings inputs
     document.getElementById('musicEnabled').addEventListener('change', (e) => {
@@ -86,20 +113,46 @@ function setupEventListeners() {
     });
 
     document.getElementById('volumeSlider').addEventListener('input', (e) => {
-        document.getElementById('volumeValue').textContent = e.target.value + '%';
+        const volume = e.target.value;
+        document.getElementById('volumeValue').textContent = volume + '%';
+        if (gainNode) {
+            gainNode.gain.value = volume / 100;
+        }
+    });
+
+    document.getElementById('musicSelect').addEventListener('change', () => {
+        if (isPlayingMusic) {
+            stopMusic();
+            setTimeout(() => playMusic(), 100);
+        }
     });
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-        if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
-            e.preventDefault();
-            if (timerState.isRunning) {
-                pauseTimer();
-            } else {
-                startTimer();
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (timerState.isRunning) {
+                    pauseTimer();
+                } else {
+                    startTimer();
+                }
+            } else if (e.code === 'KeyR') {
+                e.preventDefault();
+                resetTimer();
+            } else if (e.code === 'KeyS') {
+                e.preventDefault();
+                skipSession();
             }
         }
     });
+
+    // Resume audio context on user interaction
+    document.addEventListener('click', () => {
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+    }, { once: true });
 }
 
 // Timer Functions
@@ -158,13 +211,30 @@ function resetTimer() {
     updateProgressRing();
 }
 
+function skipSession() {
+    if (timerState.isRunning) {
+        pauseTimer();
+    }
+    completeSession();
+}
+
 function completeSession() {
     clearInterval(timerState.intervalId);
     timerState.isRunning = false;
     
     timeDisplay.classList.remove('pulsing');
 
-    if (timerState.currentMode === 'work') {
+    const wasWorkSession = timerState.currentMode === 'work';
+
+    // Play completion sound multiple times for emphasis
+    if (settings.soundEnabled) {
+        playCompletionAlert();
+    }
+
+    // Flash the screen
+    flashScreen();
+
+    if (wasWorkSession) {
         timerState.completedSessions++;
         timerState.totalFocusTime += settings.workDuration;
         saveStats();
@@ -175,21 +245,25 @@ function completeSession() {
         } else {
             switchMode('break');
         }
+
+        showNotification('🎉 Work session complete! Time for a break.');
+
+        if (settings.autoStartBreaks) {
+            showNotification('⏰ Break starting in 3 seconds...');
+            setTimeout(() => startTimer(), 3000);
+        }
     } else {
         // After break, switch back to work
         timerState.sessionCount++;
         switchMode('work');
-    }
 
-    if (settings.soundEnabled) {
-        playNotificationSound();
-    }
+        showNotification('💪 Break over! Ready to focus again?');
 
-    showNotification(
-        timerState.currentMode === 'work' 
-            ? 'Work session complete! Time for a break.' 
-            : 'Break over! Ready to focus again?'
-    );
+        if (settings.autoStartWork) {
+            showNotification('⏰ Work session starting in 3 seconds...');
+            setTimeout(() => startTimer(), 3000);
+        }
+    }
 
     stopMusic();
     startBtn.disabled = false;
@@ -252,6 +326,19 @@ function toggleSettings() {
     settingsContent.classList.toggle('active');
 }
 
+function applyPreset() {
+    const preset = timerPresetSelect.value;
+    if (!preset) return;
+
+    const [work, shortBreak, longBreak] = preset.split('-').map(Number);
+    
+    document.getElementById('workDuration').value = work;
+    document.getElementById('breakDuration').value = shortBreak;
+    document.getElementById('longBreakDuration').value = longBreak;
+
+    showNotification(`✅ Preset applied: ${work}/${shortBreak}/${longBreak} minutes`);
+}
+
 function saveSettings() {
     settings.workDuration = parseInt(document.getElementById('workDuration').value);
     settings.breakDuration = parseInt(document.getElementById('breakDuration').value);
@@ -261,6 +348,8 @@ function saveSettings() {
     settings.musicEnabled = document.getElementById('musicEnabled').checked;
     settings.musicTrack = document.getElementById('musicSelect').value;
     settings.volume = parseInt(document.getElementById('volumeSlider').value);
+    settings.autoStartBreaks = document.getElementById('autoStartBreaks').checked;
+    settings.autoStartWork = document.getElementById('autoStartWork').checked;
 
     localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
 
@@ -272,7 +361,7 @@ function saveSettings() {
         updateProgressRing();
     }
 
-    showNotification('Settings saved successfully!');
+    showNotification('✅ Settings saved successfully!');
     toggleSettings();
 }
 
@@ -293,6 +382,8 @@ function loadSettings() {
     document.getElementById('volumeSlider').value = settings.volume;
     document.getElementById('volumeValue').textContent = settings.volume + '%';
     document.getElementById('musicControls').style.display = settings.musicEnabled ? 'block' : 'none';
+    document.getElementById('autoStartBreaks').checked = settings.autoStartBreaks;
+    document.getElementById('autoStartWork').checked = settings.autoStartWork;
 
     // Set initial time
     timerState.timeRemaining = settings.workDuration * 60;
@@ -334,28 +425,137 @@ function playNotificationSound() {
 }
 
 function playMusic() {
-    if (!settings.musicEnabled) return;
+    if (!settings.musicEnabled || !audioContext) return;
 
-    // Remove existing music player if any
     stopMusic();
 
-    // Create music indicator
-    const indicator = document.createElement('div');
-    indicator.className = 'music-indicator';
-    indicator.id = 'musicIndicator';
-    indicator.innerHTML = `<span>Playing: ${settings.musicTrack}</span>`;
-    document.body.appendChild(indicator);
+    try {
+        // Create noise buffer for ambient sound
+        const bufferSize = 4096;
+        const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+        }
+        
+        const whiteNoise = audioContext.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+        
+        // Create filter for different ambient sounds
+        const filter = audioContext.createBiquadFilter();
+        const trackConfig = musicTracks[settings.musicTrack];
+        filter.type = 'lowpass';
+        filter.frequency.value = trackConfig.frequency;
+        
+        // Create gain node for volume control
+        gainNode = audioContext.createGain();
+        gainNode.gain.value = (settings.volume / 100) * 0.3;
+        
+        // Connect nodes
+        whiteNoise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        whiteNoise.start();
+        musicSource = whiteNoise;
+        isPlayingMusic = true;
 
-    // Note: For a real implementation, you would need to use the YouTube IFrame API
-    // or integrate with a music streaming service. This is a placeholder.
-    console.log(`Playing ${settings.musicTrack} music at ${settings.volume}% volume`);
+        // Show music indicator
+        const indicator = document.createElement('div');
+        indicator.className = 'music-indicator';
+        indicator.id = 'musicIndicator';
+        indicator.innerHTML = `<span>${trackConfig.description}</span>`;
+        document.body.appendChild(indicator);
+    } catch (e) {
+        console.log('Could not play music:', e);
+    }
 }
 
 function stopMusic() {
+    if (musicSource) {
+        try {
+            musicSource.stop();
+        } catch (e) {
+            // Already stopped
+        }
+        musicSource = null;
+    }
+    
+    isPlayingMusic = false;
+    
     const indicator = document.getElementById('musicIndicator');
     if (indicator) {
         indicator.remove();
     }
+}
+
+function playCompletionAlert() {
+    // Play notification sound 3 times
+    for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+            notificationSound.currentTime = 0;
+            notificationSound.play().catch(e => console.log('Could not play sound:', e));
+        }, i * 400);
+    }
+}
+
+function flashScreen() {
+    const flash = document.createElement('div');
+    flash.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(231, 76, 60, 0.3);
+        z-index: 9999;
+        pointer-events: none;
+        animation: flash 0.5s ease-in-out 3;
+    `;
+    document.body.appendChild(flash);
+    
+    // Add flash animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes flash {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    setTimeout(() => {
+        flash.remove();
+        style.remove();
+    }, 1500);
+}
+
+function toggleFullscreen() {
+    document.body.classList.toggle('fullscreen');
+    
+    if (document.body.classList.contains('fullscreen')) {
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+        }
+    }
+}
+
+function toggleTheme() {
+    document.body.classList.toggle('light-theme');
+    const isLight = document.body.classList.contains('light-theme');
+    localStorage.setItem('pomodoroTheme', isLight ? 'light' : 'dark');
+}
+
+// Load theme preference
+const savedTheme = localStorage.getItem('pomodoroTheme');
+if (savedTheme === 'light') {
+    document.body.classList.add('light-theme');
 }
 
 // Notification Functions
@@ -383,11 +583,4 @@ function showNotification(message) {
 // Request notification permission on load
 if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
-}
-
-// Service Worker for offline support (optional enhancement)
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-        // Service worker not available, continue without it
-    });
 }
