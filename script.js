@@ -58,34 +58,34 @@ let isPlayingMusic = false;
 // Ambient sound URLs (free, royalty-free sources)
 const musicTracks = {
     rain: {
-        url: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_1084ffd567.mp3',
+        url: 'https://assets.mixkit.co/active_storage/sfx/2378/2378-preview.mp3',
         description: 'Rain Sounds',
-        fallback: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+        fallback: 'https://assets.mixkit.co/active_storage/sfx/2379/2379-preview.mp3'
     },
     forest: {
-        url: 'https://cdn.pixabay.com/download/audio/2022/04/13/audio_f47b2a7e96.mp3',
+        url: 'https://assets.mixkit.co/active_storage/sfx/2382/2382-preview.mp3',
         description: 'Forest Ambience',
-        fallback: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
+        fallback: 'https://assets.mixkit.co/active_storage/sfx/2383/2383-preview.mp3'
     },
     ocean: {
-        url: 'https://cdn.pixabay.com/download/audio/2022/05/18/audio_2c5af78f34.mp3',
+        url: 'https://assets.mixkit.co/active_storage/sfx/2385/2385-preview.mp3',
         description: 'Ocean Waves',
-        fallback: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
+        fallback: 'https://assets.mixkit.co/active_storage/sfx/2386/2386-preview.mp3'
     },
     cafe: {
-        url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_10db0e5a0f.mp3',
+        url: 'https://assets.mixkit.co/active_storage/sfx/2388/2388-preview.mp3',
         description: 'Coffee Shop',
-        fallback: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'
+        fallback: 'https://assets.mixkit.co/active_storage/sfx/2389/2389-preview.mp3'
     },
     whitenoise: {
-        url: 'https://cdn.pixabay.com/download/audio/2022/02/15/audio_e52f1d0f35.mp3',
+        url: 'https://assets.mixkit.co/active_storage/sfx/2391/2391-preview.mp3',
         description: 'White Noise',
-        fallback: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'
+        fallback: 'https://assets.mixkit.co/active_storage/sfx/2392/2392-preview.mp3'
     },
     fire: {
-        url: 'https://cdn.pixabay.com/download/audio/2022/06/21/audio_de4a2e674f.mp3',
+        url: 'https://assets.mixkit.co/active_storage/sfx/2394/2394-preview.mp3',
         description: 'Fireplace',
-        fallback: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'
+        fallback: 'https://assets.mixkit.co/active_storage/sfx/2395/2395-preview.mp3'
     }
 };
 
@@ -100,21 +100,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Event Listeners
 function setupEventListeners() {
-    startBtn.addEventListener('click', startTimer);
-    pauseBtn.addEventListener('click', pauseTimer);
-    resetBtn.addEventListener('click', resetTimer);
-    skipBtn.addEventListener('click', skipSession);
-    fullscreenBtn.addEventListener('click', toggleFullscreen);
-    themeBtn.addEventListener('click', toggleTheme);
-    musicBtn.addEventListener('click', toggleMusicButton);
+    if (startBtn) startBtn.addEventListener('click', startTimer);
+    if (pauseBtn) pauseBtn.addEventListener('click', pauseTimer);
+    if (resetBtn) resetBtn.addEventListener('click', resetTimer);
+    if (skipBtn) skipBtn.addEventListener('click', skipSession);
+    if (fullscreenBtn) fullscreenBtn.addEventListener('click', toggleFullscreen);
+    if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+    if (musicBtn) musicBtn.addEventListener('click', toggleMusicButton);
     
     modeBtns.forEach(btn => {
         btn.addEventListener('click', () => switchMode(btn.dataset.mode));
     });
 
-    settingsToggle.addEventListener('click', toggleSettings);
-    saveSettingsBtn.addEventListener('click', saveSettings);
-    timerPresetSelect.addEventListener('change', applyPreset);
+    if (settingsToggle) settingsToggle.addEventListener('click', toggleSettings);
+    if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings);
+    if (timerPresetSelect) timerPresetSelect.addEventListener('change', applyPreset);
 
     // Settings inputs
     document.getElementById('musicEnabled').addEventListener('change', (e) => {
@@ -443,6 +443,7 @@ function playMusic() {
 
     try {
         const trackConfig = musicTracks[settings.musicTrack];
+        console.log(`Playing ${trackConfig.description} at ${settings.volume}% volume`);
         
         // Create audio player
         audioPlayer = new Audio();
@@ -450,6 +451,13 @@ function playMusic() {
         audioPlayer.volume = (settings.volume / 100) * 0.5; // Keep it subtle
         audioPlayer.loop = true;
         audioPlayer.crossOrigin = 'anonymous';
+        
+        // Add error handler
+        audioPlayer.addEventListener('error', (e) => {
+            console.log('Audio error with primary URL, trying fallback:', e);
+            audioPlayer.src = trackConfig.fallback;
+            audioPlayer.play().catch(err => console.log('Fallback also failed:', err));
+        });
         
         // Try to play
         const playPromise = audioPlayer.play();
