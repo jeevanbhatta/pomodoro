@@ -51,19 +51,41 @@ progressRing.style.strokeDasharray = `${progressRingCircumference} ${progressRin
 progressRing.style.strokeDashoffset = 0;
 
 // Audio Context for background music
-let audioContext = null;
-let musicSource = null;
-let gainNode = null;
+let audioPlayer = null;
 let isPlayingMusic = false;
 
-// Ambient sound configurations
+// Ambient sound URLs (free, royalty-free sources)
 const musicTracks = {
-    rain: { frequency: 100, type: 'noise', description: 'Rain Sounds' },
-    forest: { frequency: 150, type: 'noise', description: 'Forest Ambience' },
-    ocean: { frequency: 80, type: 'noise', description: 'Ocean Waves' },
-    cafe: { frequency: 200, type: 'noise', description: 'Coffee Shop' },
-    whitenoise: { frequency: 440, type: 'noise', description: 'White Noise' },
-    fire: { frequency: 120, type: 'noise', description: 'Fireplace' }
+    rain: {
+        url: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_1084ffd567.mp3',
+        description: 'Rain Sounds',
+        fallback: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+    },
+    forest: {
+        url: 'https://cdn.pixabay.com/download/audio/2022/04/13/audio_f47b2a7e96.mp3',
+        description: 'Forest Ambience',
+        fallback: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
+    },
+    ocean: {
+        url: 'https://cdn.pixabay.com/download/audio/2022/05/18/audio_2c5af78f34.mp3',
+        description: 'Ocean Waves',
+        fallback: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
+    },
+    cafe: {
+        url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_10db0e5a0f.mp3',
+        description: 'Coffee Shop',
+        fallback: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'
+    },
+    whitenoise: {
+        url: 'https://cdn.pixabay.com/download/audio/2022/02/15/audio_e52f1d0f35.mp3',
+        description: 'White Noise',
+        fallback: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'
+    },
+    fire: {
+        url: 'https://cdn.pixabay.com/download/audio/2022/06/21/audio_de4a2e674f.mp3',
+        description: 'Fireplace',
+        fallback: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'
+    }
 };
 
 // Initialize
@@ -73,17 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateProgressRing();
     setupEventListeners();
     loadStats();
-    initAudioContext();
 });
-
-// Initialize Audio Context
-function initAudioContext() {
-    try {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    } catch (e) {
-        console.log('Web Audio API not supported');
-    }
-}
 
 // Event Listeners
 function setupEventListeners() {
@@ -115,13 +127,13 @@ function setupEventListeners() {
     document.getElementById('volumeSlider').addEventListener('input', (e) => {
         const volume = e.target.value;
         document.getElementById('volumeValue').textContent = volume + '%';
-        if (gainNode) {
-            gainNode.gain.value = volume / 100;
+        if (audioPlayer) {
+            audioPlayer.volume = (volume / 100) * 0.5;
         }
     });
 
     document.getElementById('musicSelect').addEventListener('change', () => {
-        if (isPlayingMusic) {
+        if (isPlayingMusic && timerState.isRunning) {
             stopMusic();
             setTimeout(() => playMusic(), 100);
         }
@@ -146,13 +158,6 @@ function setupEventListeners() {
             }
         }
     });
-
-    // Resume audio context on user interaction
-    document.addEventListener('click', () => {
-        if (audioContext && audioContext.state === 'suspended') {
-            audioContext.resume();
-        }
-    }, { once: true });
 }
 
 // Timer Functions
@@ -425,41 +430,31 @@ function playNotificationSound() {
 }
 
 function playMusic() {
-    if (!settings.musicEnabled || !audioContext) return;
+    if (!settings.musicEnabled) return;
 
     stopMusic();
 
     try {
-        // Create noise buffer for ambient sound
-        const bufferSize = 4096;
-        const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
+        const trackConfig = musicTracks[settings.musicTrack];
         
-        for (let i = 0; i < bufferSize; i++) {
-            output[i] = Math.random() * 2 - 1;
+        // Create audio player
+        audioPlayer = new Audio();
+        audioPlayer.src = trackConfig.url;
+        audioPlayer.volume = (settings.volume / 100) * 0.5; // Keep it subtle
+        audioPlayer.loop = true;
+        audioPlayer.crossOrigin = 'anonymous';
+        
+        // Try to play
+        const playPromise = audioPlayer.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.log('Could not play music:', error);
+                // Try fallback URL
+                audioPlayer.src = trackConfig.fallback;
+                audioPlayer.play().catch(e => console.log('Fallback also failed:', e));
+            });
         }
         
-        const whiteNoise = audioContext.createBufferSource();
-        whiteNoise.buffer = noiseBuffer;
-        whiteNoise.loop = true;
-        
-        // Create filter for different ambient sounds
-        const filter = audioContext.createBiquadFilter();
-        const trackConfig = musicTracks[settings.musicTrack];
-        filter.type = 'lowpass';
-        filter.frequency.value = trackConfig.frequency;
-        
-        // Create gain node for volume control
-        gainNode = audioContext.createGain();
-        gainNode.gain.value = (settings.volume / 100) * 0.3;
-        
-        // Connect nodes
-        whiteNoise.connect(filter);
-        filter.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        whiteNoise.start();
-        musicSource = whiteNoise;
         isPlayingMusic = true;
 
         // Show music indicator
@@ -469,18 +464,19 @@ function playMusic() {
         indicator.innerHTML = `<span>${trackConfig.description}</span>`;
         document.body.appendChild(indicator);
     } catch (e) {
-        console.log('Could not play music:', e);
+        console.log('Could not initialize music player:', e);
     }
 }
 
 function stopMusic() {
-    if (musicSource) {
+    if (audioPlayer) {
         try {
-            musicSource.stop();
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
         } catch (e) {
             // Already stopped
         }
-        musicSource = null;
+        audioPlayer = null;
     }
     
     isPlayingMusic = false;
