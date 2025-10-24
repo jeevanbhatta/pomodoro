@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CR8X35W2XL"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-CR8X35W2XL');
+    </script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pomodoro Timer - Focus & Productivity</title>
@@ -180,10 +190,21 @@
                     <div class="setting-group" id="musicControls" style="display: none;">
                         <label for="musicSelect">Music Track</label>
                         <select id="musicSelect">
-                            <option value="lofi">Lo-fi Study</option>
-                            <option value="nature">Nature Walk</option>
-                            <option value="ambient">Ambient Beauty</option>
-                            <option value="study">Study Focus</option>
+                            <optgroup label="Lo-fi & Study">
+                                <option value="lofi">Lo-fi Study</option>
+                                <option value="lofiInstrumental">Lo-fi Instrumental</option>
+                                <option value="lofiChill">Lo-fi Chill Hop</option>
+                                <option value="study">Study Focus</option>
+                            </optgroup>
+                            <optgroup label="Nature & Ambient">
+                                <option value="nature">Nature Walk</option>
+                                <option value="ambient">Ambient Beauty</option>
+                                <option value="rain">Rain Sounds</option>
+                                <option value="sleepyRain">Sleepy Rain</option>
+                                <option value="forestLullaby">Forest Lullaby</option>
+                                <option value="midnightForest">Midnight Forest</option>
+                                <option value="himalayan">Himalayan Flute</option>
+                            </optgroup>
                         </select>
                         <div class="volume-control">
                             <label for="volumeSlider">Volume</label>
