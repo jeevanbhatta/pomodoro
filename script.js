@@ -72,6 +72,34 @@ const musicTracks = {
     study: {
         url: './songs/study-110111.mp3',
         description: 'Study Focus',
+    },
+    rain: {
+        url: './songs/rain-sounds.mp3',
+        description: 'Rain Sounds',
+    },
+    sleepyRain: {
+        url: './songs/sleepy-rain-116521.mp3',
+        description: 'Sleepy Rain',
+    },
+    forestLullaby: {
+        url: './songs/forest-lullaby-110624.mp3',
+        description: 'Forest Lullaby',
+    },
+    midnightForest: {
+        url: './songs/midnight-forest-184304.mp3',
+        description: 'Midnight Forest',
+    },
+    himalayan: {
+        url: './songs/himalayan-village-flute-251427.mp3',
+        description: 'Himalayan Flute',
+    },
+    lofiInstrumental: {
+        url: './songs/lofi-instrumental-409202.mp3',
+        description: 'Lo-fi Instrumental',
+    },
+    lofiChill: {
+        url: './songs/lofi-study-calm-peaceful-chill-hop-112191.mp3',
+        description: 'Lo-fi Chill Hop',
     }
 };
 
@@ -105,9 +133,21 @@ function setupEventListeners() {
     // Settings inputs
     document.getElementById('musicEnabled').addEventListener('change', (e) => {
         document.getElementById('musicControls').style.display = e.target.checked ? 'block' : 'none';
-        if (e.target.checked && timerState.isRunning) {
-            playMusic();
+        
+        // Update the settings object
+        settings.musicEnabled = e.target.checked;
+        
+        // Update the top music button visual state
+        updateMusicButtonState();
+        
+        // Handle music playback based on new state
+        if (e.target.checked) {
+            // Only start music if timer is running or if user explicitly wants it
+            if (timerState.isRunning) {
+                playMusic();
+            }
         } else {
+            // Always stop music when disabled
             stopMusic();
         }
     });
@@ -121,7 +161,11 @@ function setupEventListeners() {
     });
 
     document.getElementById('musicSelect').addEventListener('change', () => {
-        if (isPlayingMusic && timerState.isRunning) {
+        // Update the settings immediately
+        settings.musicTrack = document.getElementById('musicSelect').value;
+        
+        // If music is enabled and we have an audio player, switch tracks
+        if (settings.musicEnabled && audioPlayer) {
             stopMusic();
             setTimeout(() => playMusic(), 100);
         }
@@ -354,6 +398,9 @@ function saveSettings() {
         updateProgressRing();
     }
 
+    // Update music button state to reflect saved settings
+    updateMusicButtonState();
+
     showNotification('✅ Settings saved successfully!');
     toggleSettings();
 }
@@ -380,12 +427,12 @@ function loadSettings() {
     if (elem('autoStartBreaks')) elem('autoStartBreaks').checked = settings.autoStartBreaks;
     if (elem('autoStartWork')) elem('autoStartWork').checked = settings.autoStartWork;
 
-    // Update music button state
-    updateMusicButtonState();
-
     // Set initial time
     timerState.timeRemaining = settings.workDuration * 60;
     timerState.totalTime = settings.workDuration * 60;
+    
+    // Update music button state after all settings are loaded
+    updateMusicButtonState();
 }
 
 // Stats Functions
@@ -447,6 +494,18 @@ function playMusic() {
         audioPlayer.addEventListener('error', (e) => {
             console.log('Audio error:', e);
             console.log('Could not load:', trackConfig.url);
+            
+            // If this is a fallback track that doesn't exist, show a helpful message
+            if (trackConfig.fallback) {
+                showNotification(`🎵 ${trackConfig.description} not available yet. Try another track!`);
+                isPlayingMusic = false;
+                
+                // Remove the indicator since the track failed to load
+                const indicator = document.getElementById('musicIndicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
         });
         
         // Try to play
@@ -457,12 +516,19 @@ function playMusic() {
                 isPlayingMusic = true;
             }).catch(error => {
                 console.log('Could not play music:', error);
+                isPlayingMusic = false;
             });
+        } else {
+            isPlayingMusic = true;
+        }
+
+        // Remove any existing music indicator first
+        const existingIndicator = document.getElementById('musicIndicator');
+        if (existingIndicator) {
+            existingIndicator.remove();
         }
         
-        isPlayingMusic = true;
-
-        // Show music indicator
+        // Show new music indicator
         const indicator = document.createElement('div');
         indicator.className = 'music-indicator';
         indicator.id = 'musicIndicator';
@@ -478,6 +544,7 @@ function stopMusic() {
         try {
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
+            audioPlayer.src = ''; // Clear the source to free memory
         } catch (e) {
             // Already stopped
         }
@@ -486,6 +553,7 @@ function stopMusic() {
     
     isPlayingMusic = false;
     
+    // Remove any existing music indicator
     const indicator = document.getElementById('musicIndicator');
     if (indicator) {
         indicator.remove();
@@ -556,13 +624,18 @@ function toggleMusicButton() {
     const musicEnabled = document.getElementById('musicEnabled');
     if (!musicEnabled) return;
     
+    // Toggle the checkbox state
     musicEnabled.checked = !musicEnabled.checked;
     
-    // Trigger change event to update controls
+    // Update settings object
+    settings.musicEnabled = musicEnabled.checked;
+    
+    // Trigger change event to update controls and handle music playback
     musicEnabled.dispatchEvent(new Event('change'));
     
-    // Update button visual state
-    updateMusicButtonState();
+    // Show feedback to user
+    const status = musicEnabled.checked ? 'enabled' : 'disabled';
+    showNotification(`🎵 Background music ${status}`);
 }
 
 function updateMusicButtonState() {

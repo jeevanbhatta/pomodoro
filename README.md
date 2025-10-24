@@ -117,13 +117,32 @@ All stats are saved locally and persist between sessions.
 
 ### Music Integration
 
-The music player feature provides background audio to help you focus. Choose from:
-- **Lo-fi Beats**: Relaxing hip-hop instrumentals
-- **Nature Sounds**: Calming sounds from nature
-- **Ambient Music**: Atmospheric soundscapes
-- **Piano Melodies**: Gentle piano compositions
+The music player feature provides background audio to help you focus. Choose from 11 carefully curated tracks:
 
-*Note: The current implementation uses YouTube embedded videos. For production use, consider integrating with Spotify API or using local audio files.*
+**Lo-fi & Study Music:**
+- **Lo-fi Study**: Relaxing lo-fi hip-hop instrumentals
+- **Lo-fi Instrumental**: Pure instrumental lo-fi beats
+- **Lo-fi Chill Hop**: Calm and peaceful chill hop
+- **Study Focus**: Gentle instrumental music for concentration
+
+**Nature & Ambient Sounds:**
+- **Nature Walk**: Calming nature sounds and ambience
+- **Ambient Beauty**: Atmospheric soundscapes for deep focus
+- **Rain Sounds**: Soothing rain ambience
+- **Sleepy Rain**: Gentle rain for relaxation
+- **Forest Lullaby**: Peaceful forest sounds
+- **Midnight Forest**: Deep forest ambience
+- **Himalayan Flute**: Traditional flute melodies
+
+**Recent Improvements:**
+- ✅ Fixed music switching bug - tracks now change smoothly
+- ✅ Better error handling for missing audio files
+- ✅ Improved audio player cleanup and memory management
+- ✅ Added support for additional music tracks
+- ✅ Enhanced user feedback for track loading
+
+**Adding Your Own Music:**
+See `add-music.md` for detailed instructions on adding custom music tracks from free sources like Pixabay, YouTube Audio Library, and Freesound.
 
 ## 📱 Responsive Design
 
@@ -165,6 +184,19 @@ pomodoro/
 ├── index.html          # Main HTML structure
 ├── styles.css          # All styling and animations
 ├── script.js           # Application logic
+├── songs/              # Music files directory (11 tracks)
+│   ├── close-study-relax-chillhop-calm-study-lofi-123089.mp3
+│   ├── forest-lullaby-110624.mp3
+│   ├── himalayan-village-flute-251427.mp3
+│   ├── lofi-instrumental-409202.mp3
+│   ├── lofi-study-calm-peaceful-chill-hop-112191.mp3
+│   ├── midnight-forest-184304.mp3
+│   ├── nature-walk-124997.mp3
+│   ├── perfect-beauty-191271.mp3
+│   ├── rain-sounds.mp3
+│   ├── sleepy-rain-116521.mp3
+│   └── study-110111.mp3
+├── add-music.md        # Guide for adding custom music
 └── README.md          # Documentation
 ```
 
