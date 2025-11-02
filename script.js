@@ -99,6 +99,7 @@ const toggleYoutubeBtn = document.getElementById('toggleYoutubeBtn');
 const removeYoutubeBtn = document.getElementById('removeYoutubeBtn');
 const youtubePlayerWrapper = document.getElementById('youtubePlayerWrapper');
 const youtubePlayer = document.getElementById('youtubePlayer');
+const youtubeMusicGroup = document.getElementById('youtubeMusicGroup');
 
 // Wellness DOM Elements
 const wellnessModal = document.getElementById('wellnessModal');
@@ -672,6 +673,48 @@ function playMusic() {
     stopMusic();
 
     try {
+        // Check if it's YouTube player
+        if (settings.musicTrack === 'youtube') {
+            if (!youtubeState.videoId) {
+                showNotification('❌ No YouTube music added. Please add a YouTube link first.');
+                return;
+            }
+            
+            console.log('Starting YouTube music player');
+            
+            // Update the YouTube player to autoplay
+            const embedUrl = `https://www.youtube.com/embed/${youtubeState.videoId}?autoplay=1&controls=1&rel=0&modestbranding=1&loop=1&playlist=${youtubeState.videoId}`;
+            youtubePlayer.src = embedUrl;
+            
+            // Make sure player is visible
+            youtubePlayerContainer.style.display = 'block';
+            if (!youtubeState.isPlayerVisible) {
+                youtubePlayerWrapper.classList.remove('collapsed');
+                youtubeState.isPlayerVisible = true;
+                toggleYoutubeBtn.innerHTML = `
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                `;
+                toggleYoutubeBtn.title = 'Hide Player';
+                saveYoutubeMusic();
+            }
+            
+            // Show music indicator for YouTube
+            const existingIndicator = document.getElementById('musicIndicator');
+            if (existingIndicator) {
+                existingIndicator.remove();
+            }
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'music-indicator';
+            indicator.id = 'musicIndicator';
+            indicator.innerHTML = `<span>🎵 ${youtubeState.title}</span>`;
+            document.body.appendChild(indicator);
+            
+            return;
+        }
+        
         // Check if it's a custom track
         if (settings.musicTrack.startsWith('custom_')) {
             const trackId = settings.musicTrack;
@@ -765,6 +808,13 @@ function playMusic() {
 }
 
 function stopMusic() {
+    // Stop YouTube player if it's currently selected
+    if (settings.musicTrack === 'youtube' && youtubeState.videoId) {
+        // Stop YouTube by removing autoplay and reloading without it
+        const embedUrl = `https://www.youtube.com/embed/${youtubeState.videoId}?autoplay=0&controls=1&rel=0&modestbranding=1`;
+        youtubePlayer.src = embedUrl;
+    }
+    
     if (audioPlayer) {
         try {
             audioPlayer.pause();
@@ -1424,13 +1474,24 @@ function addYoutubeMusic() {
     youtubePlayerWrapper.classList.remove('collapsed');
     youtubeTitle.textContent = youtubeState.title;
     
+    // Show YouTube option in music select
+    updateYoutubeMusicSelect();
+    
+    // Automatically select YouTube as the music track
+    const musicSelect = document.getElementById('musicSelect');
+    if (musicSelect) {
+        musicSelect.value = 'youtube';
+        settings.musicTrack = 'youtube';
+        localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
+    }
+    
     // Clear input
     youtubeUrl.value = '';
     
     // Save to localStorage
     saveYoutubeMusic();
     
-    showNotification('✅ YouTube music added successfully!');
+    showNotification('✅ YouTube music added and selected!');
 }
 
 function toggleYoutubePlayer() {
@@ -1459,6 +1520,16 @@ function toggleYoutubePlayer() {
 
 function removeYoutubeMusic() {
     if (confirm('Remove YouTube music player?')) {
+        // If YouTube is currently selected, switch to default
+        if (settings.musicTrack === 'youtube') {
+            settings.musicTrack = 'lofi';
+            const musicSelect = document.getElementById('musicSelect');
+            if (musicSelect) {
+                musicSelect.value = 'lofi';
+            }
+            localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
+        }
+        
         youtubeState.currentUrl = '';
         youtubeState.videoId = '';
         youtubeState.title = '';
@@ -1467,8 +1538,21 @@ function removeYoutubeMusic() {
         youtubePlayer.src = '';
         youtubePlayerContainer.style.display = 'none';
         
+        // Hide YouTube option in music select
+        updateYoutubeMusicSelect();
+        
         saveYoutubeMusic();
         showNotification('🗑️ YouTube music removed');
+    }
+}
+
+function updateYoutubeMusicSelect() {
+    if (!youtubeMusicGroup) return;
+    
+    if (youtubeState.videoId) {
+        youtubeMusicGroup.style.display = 'block';
+    } else {
+        youtubeMusicGroup.style.display = 'none';
     }
 }
 
@@ -1492,6 +1576,9 @@ function loadYoutubeMusic() {
             youtubePlayer.src = embedUrl;
             youtubePlayerContainer.style.display = 'block';
             youtubeTitle.textContent = youtubeState.title;
+            
+            // Show YouTube option in music select
+            updateYoutubeMusicSelect();
             
             if (!youtubeState.isPlayerVisible) {
                 youtubePlayerWrapper.classList.add('collapsed');
