@@ -45,6 +45,14 @@ let customMusicState = {
     currentCustomTrack: null
 };
 
+// YouTube Music State
+let youtubeState = {
+    currentUrl: '',
+    videoId: '',
+    title: '',
+    isPlayerVisible: true
+};
+
 // DOM Elements
 const timeDisplay = document.getElementById('time');
 const sessionCountDisplay = document.getElementById('sessionCount');
@@ -81,6 +89,16 @@ const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 const musicUpload = document.getElementById('musicUpload');
 const customMusicList = document.getElementById('customMusicList');
 const customMusicGroup = document.getElementById('customMusicGroup');
+
+// YouTube Music DOM Elements
+const youtubeUrl = document.getElementById('youtubeUrl');
+const addYoutubeBtn = document.getElementById('addYoutubeBtn');
+const youtubePlayerContainer = document.getElementById('youtubePlayerContainer');
+const youtubeTitle = document.getElementById('youtubeTitle');
+const toggleYoutubeBtn = document.getElementById('toggleYoutubeBtn');
+const removeYoutubeBtn = document.getElementById('removeYoutubeBtn');
+const youtubePlayerWrapper = document.getElementById('youtubePlayerWrapper');
+const youtubePlayer = document.getElementById('youtubePlayer');
 
 // Wellness DOM Elements
 const wellnessModal = document.getElementById('wellnessModal');
@@ -159,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadStats();
     loadTaskData();
     loadCustomMusic();
+    loadYoutubeMusic();
 });
 
 // Event Listeners
@@ -258,6 +277,18 @@ function setupEventListeners() {
             uploadArea.classList.remove('dragover');
             const files = e.dataTransfer.files;
             handleMusicFiles(files);
+        });
+    }
+
+    // YouTube Music Event Listeners
+    if (addYoutubeBtn) addYoutubeBtn.addEventListener('click', addYoutubeMusic);
+    if (toggleYoutubeBtn) toggleYoutubeBtn.addEventListener('click', toggleYoutubePlayer);
+    if (removeYoutubeBtn) removeYoutubeBtn.addEventListener('click', removeYoutubeMusic);
+    if (youtubeUrl) {
+        youtubeUrl.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addYoutubeMusic();
+            }
         });
     }
 
@@ -1355,5 +1386,124 @@ function getWellnessData(type) {
 function closeWellnessModal() {
     if (wellnessModal) {
         wellnessModal.style.display = 'none';
+    }
+}
+
+// YouTube Music Functions
+function extractYouTubeVideoId(url) {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+}
+
+function addYoutubeMusic() {
+    const url = youtubeUrl.value.trim();
+    if (!url) {
+        showNotification('❌ Please enter a YouTube URL');
+        return;
+    }
+
+    const videoId = extractYouTubeVideoId(url);
+    if (!videoId) {
+        showNotification('❌ Invalid YouTube URL. Please check the link.');
+        return;
+    }
+
+    // Store YouTube music data
+    youtubeState.currentUrl = url;
+    youtubeState.videoId = videoId;
+    youtubeState.title = 'YouTube Music';
+    youtubeState.isPlayerVisible = true;
+
+    // Create embed URL
+    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&controls=1&rel=0&modestbranding=1`;
+    
+    // Update player
+    youtubePlayer.src = embedUrl;
+    youtubePlayerContainer.style.display = 'block';
+    youtubePlayerWrapper.classList.remove('collapsed');
+    youtubeTitle.textContent = youtubeState.title;
+    
+    // Clear input
+    youtubeUrl.value = '';
+    
+    // Save to localStorage
+    saveYoutubeMusic();
+    
+    showNotification('✅ YouTube music added successfully!');
+}
+
+function toggleYoutubePlayer() {
+    youtubeState.isPlayerVisible = !youtubeState.isPlayerVisible;
+    
+    if (youtubeState.isPlayerVisible) {
+        youtubePlayerWrapper.classList.remove('collapsed');
+        toggleYoutubeBtn.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        `;
+        toggleYoutubeBtn.title = 'Hide Player';
+    } else {
+        youtubePlayerWrapper.classList.add('collapsed');
+        toggleYoutubeBtn.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+        `;
+        toggleYoutubeBtn.title = 'Show Player';
+    }
+    
+    saveYoutubeMusic();
+}
+
+function removeYoutubeMusic() {
+    if (confirm('Remove YouTube music player?')) {
+        youtubeState.currentUrl = '';
+        youtubeState.videoId = '';
+        youtubeState.title = '';
+        youtubeState.isPlayerVisible = true;
+        
+        youtubePlayer.src = '';
+        youtubePlayerContainer.style.display = 'none';
+        
+        saveYoutubeMusic();
+        showNotification('🗑️ YouTube music removed');
+    }
+}
+
+function saveYoutubeMusic() {
+    localStorage.setItem('pomodoroYoutubeMusic', JSON.stringify(youtubeState));
+}
+
+function loadYoutubeMusic() {
+    try {
+        const saved = localStorage.getItem('pomodoroYoutubeMusic');
+        if (!saved) return;
+        
+        const data = JSON.parse(saved);
+        youtubeState.currentUrl = data.currentUrl || '';
+        youtubeState.videoId = data.videoId || '';
+        youtubeState.title = data.title || '';
+        youtubeState.isPlayerVisible = data.isPlayerVisible !== undefined ? data.isPlayerVisible : true;
+        
+        if (youtubeState.videoId) {
+            const embedUrl = `https://www.youtube.com/embed/${youtubeState.videoId}?autoplay=0&controls=1&rel=0&modestbranding=1`;
+            youtubePlayer.src = embedUrl;
+            youtubePlayerContainer.style.display = 'block';
+            youtubeTitle.textContent = youtubeState.title;
+            
+            if (!youtubeState.isPlayerVisible) {
+                youtubePlayerWrapper.classList.add('collapsed');
+                toggleYoutubeBtn.innerHTML = `
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
+                `;
+                toggleYoutubeBtn.title = 'Show Player';
+            }
+        }
+    } catch (e) {
+        console.log('Could not load YouTube music:', e);
     }
 }
