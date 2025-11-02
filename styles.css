@@ -1139,8 +1139,9 @@ body.light-theme .progress-bar {
     padding: 0;
     max-width: 500px;
     width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     animation: slideInUp 0.4s ease;
 }
@@ -1184,6 +1185,9 @@ body.light-theme .progress-bar {
 .wellness-modal-body {
     padding: 30px;
     text-align: center;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 .wellness-icon {
@@ -1238,6 +1242,9 @@ body.light-theme .progress-bar {
     display: flex;
     gap: 15px;
     justify-content: center;
+    flex-shrink: 0;
+    border-top: 1px solid var(--card-bg);
+    margin-top: auto;
 }
 
 .wellness-btn {
@@ -1294,6 +1301,10 @@ body.light-theme .wellness-modal-content {
 
 body.light-theme .wellness-modal-header {
     border-bottom-color: #e2e8f0;
+}
+
+body.light-theme .wellness-modal-footer {
+    border-top-color: #e2e8f0;
 }
 
 body.light-theme .wellness-modal-header h3,

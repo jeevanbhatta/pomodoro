@@ -24,10 +24,10 @@ let settings = {
     autoStartBreaks: false,
     autoStartWork: false,
     taskManagementEnabled: false,
-    eyeRestReminders: false,
-    postureReminders: false,
-    hydrationReminders: false,
-    wellnessFrequency: 3,
+    eyeRestReminders: true,
+    postureReminders: true,
+    hydrationReminders: true,
+    wellnessFrequency: 2,
     wellnessReminderMode: 'random',
     wellnessReminderCycleIndex: 0
 };
