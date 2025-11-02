@@ -314,34 +314,84 @@
                         </select>
                         
                         <div class="youtube-music-section">
-                            <label for="youtubeUrl">YouTube Music Link</label>
-                            <div class="youtube-input-group">
-                                <input type="url" id="youtubeUrl" placeholder="Paste YouTube URL here..." maxlength="200">
-                                <button class="youtube-btn" id="addYoutubeBtn" title="Add YouTube Music">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            <div class="youtube-section-header">
+                                <button class="youtube-section-toggle" id="youtubeQueueToggle" type="button">
+                                    <span>🎵 YouTube Music & Queue</span>
+                                    <svg class="toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="18 15 12 9 6 15"></polyline>
                                     </svg>
                                 </button>
                             </div>
-                            <div class="youtube-player-container" id="youtubePlayerContainer" style="display: none;">
-                                <div class="youtube-player-header">
-                                    <span class="youtube-title" id="youtubeTitle">YouTube Music</span>
-                                    <div class="youtube-controls">
-                                        <button class="youtube-control-btn" id="toggleYoutubeBtn" title="Show/Hide Player">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <polyline points="6 9 12 15 18 9"></polyline>
-                                            </svg>
-                                        </button>
-                                        <button class="youtube-control-btn" id="removeYoutubeBtn" title="Remove YouTube Music">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                                            </svg>
-                                        </button>
-                                    </div>
+                            
+                            <div class="youtube-section-content" id="youtubeQueueContent">
+                                <label for="youtubeUrl">Add YouTube Music/Playlist</label>
+                                <div class="youtube-input-group">
+                                    <input type="url" id="youtubeUrl" placeholder="Paste YouTube URL or Playlist here..." maxlength="300">
+                                    <button class="youtube-btn" id="addYoutubeBtn" title="Add to Queue">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                    </button>
                                 </div>
-                                <div class="youtube-player-wrapper" id="youtubePlayerWrapper">
-                                    <div id="youtubePlayer" style="width: 100%; height: 200px;"></div>
+                                
+                                <!-- YouTube Queue -->
+                                <div class="youtube-queue" id="youtubeQueue" style="display: none;">
+                                    <div class="queue-header">
+                                        <h4>🎵 Music Queue</h4>
+                                        <div class="queue-controls">
+                                            <button class="queue-btn" id="shuffleQueueBtn" title="Shuffle Queue">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <polyline points="16 3 21 3 21 8"></polyline>
+                                                    <path d="M4 20L21 3"></path>
+                                                    <polyline points="21 16 21 21 16 21"></polyline>
+                                                    <path d="M15 15l6 6"></path>
+                                                    <path d="M4 4l5 5"></path>
+                                                </svg>
+                                            </button>
+                                            <button class="queue-btn" id="clearQueueBtn" title="Clear Queue">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="m19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="queue-list" id="queueList"></div>
+                                </div>
+                                
+                                <div class="youtube-player-container" id="youtubePlayerContainer" style="display: none;">
+                                    <div class="youtube-player-header">
+                                        <span class="youtube-title" id="youtubeTitle">YouTube Music</span>
+                                        <div class="youtube-controls">
+                                            <button class="youtube-control-btn" id="prevTrackBtn" title="Previous Track">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                                                    <line x1="5" y1="19" x2="5" y2="5"></line>
+                                                </svg>
+                                            </button>
+                                            <button class="youtube-control-btn" id="nextTrackBtn" title="Next Track">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                                                    <line x1="19" y1="5" x2="19" y2="19"></line>
+                                                </svg>
+                                            </button>
+                                            <button class="youtube-control-btn" id="toggleYoutubeBtn" title="Show/Hide Player">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                                </svg>
+                                            </button>
+                                            <button class="youtube-control-btn" id="removeYoutubeBtn" title="Remove All YouTube Music">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="youtube-player-wrapper" id="youtubePlayerWrapper">
+                                        <div id="youtubePlayer" style="width: 100%; height: 200px;"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

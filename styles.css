@@ -1128,6 +1128,51 @@ body.light-theme .progress-bar {
     border: 2px dashed var(--text-secondary);
 }
 
+.youtube-section-header {
+    margin-bottom: 10px;
+}
+
+.youtube-section-toggle {
+    width: 100%;
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text-primary);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.youtube-section-toggle:hover {
+    border-color: var(--primary-color);
+    background: var(--hover-bg);
+}
+
+.youtube-section-toggle .toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.youtube-section-toggle.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.youtube-section-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+}
+
+.youtube-section-content.active {
+    max-height: 800px;
+    padding-top: 15px;
+}
+
 .youtube-music-section label {
     display: block;
     margin-bottom: 10px;
@@ -1243,6 +1288,128 @@ body.light-theme .progress-bar {
     border-radius: 0 0 8px 8px;
 }
 
+/* YouTube Queue Styles */
+.youtube-queue {
+    margin-top: 15px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.queue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: var(--dark-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.queue-header h4 {
+    margin: 0;
+    font-size: 0.9em;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.queue-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.queue-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.queue-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.queue-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.queue-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s ease;
+    cursor: pointer;
+}
+
+.queue-item:last-child {
+    border-bottom: none;
+}
+
+.queue-item:hover {
+    background: var(--hover-bg);
+}
+
+.queue-item.current {
+    background: rgba(231, 76, 60, 0.1);
+    border-left: 3px solid var(--primary-color);
+}
+
+.queue-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.queue-item-title {
+    font-size: 0.85em;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.queue-item-duration {
+    font-size: 0.75em;
+    color: var(--text-secondary);
+}
+
+.queue-item-actions {
+    display: flex;
+    gap: 5px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.queue-item:hover .queue-item-actions {
+    opacity: 1;
+}
+
+.queue-item-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.queue-item-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
 /* Light theme YouTube styles */
 body.light-theme .youtube-music-section {
     background: #ffffff;
@@ -1264,6 +1431,43 @@ body.light-theme .youtube-player-container {
 
 body.light-theme .youtube-title {
     color: #2d3748;
+}
+
+body.light-theme .youtube-section-toggle {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    color: #2d3748;
+}
+
+body.light-theme .youtube-section-toggle:hover {
+    background: #f7fafc;
+}
+
+body.light-theme .youtube-queue {
+    background: #ffffff;
+    border-color: #e2e8f0;
+}
+
+body.light-theme .queue-header {
+    background: #f7fafc;
+    border-color: #e2e8f0;
+}
+
+body.light-theme .queue-item {
+    border-color: #e2e8f0;
+}
+
+body.light-theme .queue-item:hover {
+    background: #f7fafc;
+}
+
+body.light-theme .queue-btn {
+    border-color: #e2e8f0;
+    color: #4a5568;
+}
+
+body.light-theme .queue-item-btn {
+    color: #4a5568;
 }
 
 /* Wellness Features Styles */

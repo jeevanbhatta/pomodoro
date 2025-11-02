@@ -52,7 +52,10 @@ let youtubeState = {
     title: '',
     isPlayerVisible: true,
     player: null,
-    isReady: false
+    isReady: false,
+    queue: [],
+    currentIndex: 0,
+    isShuffled: false
 };
 
 // DOM Elements
@@ -102,6 +105,16 @@ const removeYoutubeBtn = document.getElementById('removeYoutubeBtn');
 const youtubePlayerWrapper = document.getElementById('youtubePlayerWrapper');
 const youtubePlayer = document.getElementById('youtubePlayer');
 const youtubeMusicGroup = document.getElementById('youtubeMusicGroup');
+
+// YouTube Queue Elements
+const youtubeQueueToggle = document.getElementById('youtubeQueueToggle');
+const youtubeQueueContent = document.getElementById('youtubeQueueContent');
+const youtubeQueue = document.getElementById('youtubeQueue');
+const queueList = document.getElementById('queueList');
+const shuffleQueueBtn = document.getElementById('shuffleQueueBtn');
+const clearQueueBtn = document.getElementById('clearQueueBtn');
+const prevTrackBtn = document.getElementById('prevTrackBtn');
+const nextTrackBtn = document.getElementById('nextTrackBtn');
 
 // Wellness DOM Elements
 const wellnessModal = document.getElementById('wellnessModal');
@@ -312,6 +325,13 @@ function setupEventListeners() {
             }
         });
     }
+
+    // YouTube Queue Event Listeners
+    if (youtubeQueueToggle) youtubeQueueToggle.addEventListener('click', toggleYoutubeQueue);
+    if (shuffleQueueBtn) shuffleQueueBtn.addEventListener('click', shuffleQueue);
+    if (clearQueueBtn) clearQueueBtn.addEventListener('click', clearQueue);
+    if (prevTrackBtn) prevTrackBtn.addEventListener('click', playPreviousTrack);
+    if (nextTrackBtn) nextTrackBtn.addEventListener('click', playNextTrack);
 
     // Wellness Event Listeners
     if (wellnessModalClose) wellnessModalClose.addEventListener('click', closeWellnessModal);
@@ -1521,37 +1541,52 @@ function addYoutubeMusic() {
         return;
     }
 
+    // Check if it's a playlist
+    if (isPlaylistUrl(url)) {
+        showNotification('📝 Playlist detected! Please add individual videos for now.');
+        return;
+    }
+
     const videoId = extractYouTubeVideoId(url);
     if (!videoId) {
         showNotification('❌ Invalid YouTube URL. Please check the link.');
         return;
     }
 
-    // Store YouTube music data
-    youtubeState.currentUrl = url;
-    youtubeState.videoId = videoId;
-    youtubeState.title = 'YouTube Music';
-    youtubeState.isPlayerVisible = true;
+    // Create video data object
+    const videoData = {
+        videoId: videoId,
+        url: url,
+        title: `YouTube Video ${videoId}`,
+        duration: 'Unknown'
+    };
 
-    // Create YouTube player using API
-    if (window.YT && window.YT.Player) {
-        // Destroy existing player if it exists
-        if (youtubeState.player) {
-            youtubeState.player.destroy();
-        }
-        
-        youtubeState.player = new YT.Player('youtubePlayer', {
-            height: '200',
-            width: '100%',
-            videoId: videoId,
-            playerVars: {
-                'autoplay': 0,
-                'controls': 1,
-                'rel': 0,
-                'modestbranding': 1,
-                'loop': 1,
-                'playlist': videoId
-            },
+    // If this is the first video, set up the player
+    if (youtubeState.queue.length === 0) {
+        // Store YouTube music data
+        youtubeState.currentUrl = url;
+        youtubeState.videoId = videoId;
+        youtubeState.title = videoData.title;
+        youtubeState.isPlayerVisible = true;
+
+        // Create YouTube player using API
+        if (window.YT && window.YT.Player) {
+            // Destroy existing player if it exists
+            if (youtubeState.player) {
+                youtubeState.player.destroy();
+            }
+            
+            youtubeState.player = new YT.Player('youtubePlayer', {
+                height: '200',
+                width: '100%',
+                videoId: videoId,
+                playerVars: {
+                    'autoplay': 0,
+                    'controls': 1,
+                    'rel': 0,
+                    'modestbranding': 1,
+                    'loop': 0
+                },
                 events: {
                     'onReady': function(event) {
                         youtubeState.isReady = true;
@@ -1559,41 +1594,48 @@ function addYoutubeMusic() {
                         // Sync music select dropdown
                         syncMusicSelectWithState();
                     },
-                'onStateChange': function(event) {
-                    // Handle player state changes if needed
+                    'onStateChange': function(event) {
+                        // Auto-play next track when current ends
+                        if (event.data === YT.PlayerState.ENDED) {
+                            playNextTrack();
+                        }
+                    }
                 }
+            });
+        } else {
+            // Fallback to iframe if API not loaded
+            const iframe = document.createElement('iframe');
+            iframe.id = 'youtubePlayer';
+            iframe.width = '100%';
+            iframe.height = '200';
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=0&controls=1&rel=0&modestbranding=1`;
+            iframe.frameBorder = '0';
+            iframe.allowFullscreen = true;
+            
+            const playerDiv = document.getElementById('youtubePlayer');
+            if (playerDiv) {
+                playerDiv.parentNode.replaceChild(iframe, playerDiv);
             }
-        });
-    } else {
-        // Fallback to iframe if API not loaded
-        const iframe = document.createElement('iframe');
-        iframe.id = 'youtubePlayer';
-        iframe.width = '100%';
-        iframe.height = '200';
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=0&controls=1&rel=0&modestbranding=1`;
-        iframe.frameBorder = '0';
-        iframe.allowFullscreen = true;
+        }
         
-        const playerDiv = document.getElementById('youtubePlayer');
-        if (playerDiv) {
-            playerDiv.parentNode.replaceChild(iframe, playerDiv);
+        youtubePlayerContainer.style.display = 'block';
+        youtubePlayerWrapper.classList.remove('collapsed');
+        youtubeTitle.textContent = youtubeState.title;
+        
+        // Show YouTube option in music select
+        updateYoutubeMusicSelect();
+        
+        // Automatically select YouTube as the music track
+        const musicSelect = document.getElementById('musicSelect');
+        if (musicSelect) {
+            musicSelect.value = 'youtube';
+            settings.musicTrack = 'youtube';
+            localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
         }
     }
-    
-    youtubePlayerContainer.style.display = 'block';
-    youtubePlayerWrapper.classList.remove('collapsed');
-    youtubeTitle.textContent = youtubeState.title;
-    
-    // Show YouTube option in music select
-    updateYoutubeMusicSelect();
-    
-    // Automatically select YouTube as the music track
-    const musicSelect = document.getElementById('musicSelect');
-    if (musicSelect) {
-        musicSelect.value = 'youtube';
-        settings.musicTrack = 'youtube';
-        localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
-    }
+
+    // Add to queue
+    addToQueue(videoData);
     
     // Clear input
     youtubeUrl.value = '';
@@ -1601,7 +1643,7 @@ function addYoutubeMusic() {
     // Save to localStorage
     saveYoutubeMusic();
     
-    showNotification('✅ YouTube music added and selected!');
+    showNotification(`✅ Added to queue! (${youtubeState.queue.length} tracks)`);
 }
 
 function toggleYoutubePlayer() {
@@ -1686,6 +1728,9 @@ function loadYoutubeMusic() {
         youtubeState.videoId = data.videoId || '';
         youtubeState.title = data.title || '';
         youtubeState.isPlayerVisible = data.isPlayerVisible !== undefined ? data.isPlayerVisible : true;
+        youtubeState.queue = data.queue || [];
+        youtubeState.currentIndex = data.currentIndex || 0;
+        youtubeState.isShuffled = data.isShuffled || false;
         
         if (youtubeState.videoId) {
             // Create YouTube player using API
@@ -1733,6 +1778,14 @@ function loadYoutubeMusic() {
             // Show YouTube option in music select
             updateYoutubeMusicSelect();
             
+            // Render queue if it exists
+            if (youtubeState.queue.length > 0) {
+                renderQueue();
+                if (youtubeQueue) {
+                    youtubeQueue.style.display = 'block';
+                }
+            }
+            
             if (!youtubeState.isPlayerVisible) {
                 youtubePlayerWrapper.classList.add('collapsed');
                 toggleYoutubeBtn.innerHTML = `
@@ -1747,6 +1800,206 @@ function loadYoutubeMusic() {
         console.log('Could not load YouTube music:', e);
     }
 }
+
+// YouTube Queue Functions
+function toggleYoutubeQueue() {
+    const content = youtubeQueueContent;
+    const toggle = youtubeQueueToggle;
+    
+    if (content && toggle) {
+        content.classList.toggle('active');
+        toggle.classList.toggle('active');
+    }
+}
+
+function extractPlaylistId(url) {
+    const playlistMatch = url.match(/[&?]list=([^&]+)/);
+    return playlistMatch ? playlistMatch[1] : null;
+}
+
+function isPlaylistUrl(url) {
+    return url.includes('list=') || url.includes('playlist');
+}
+
+function addToQueue(videoData) {
+    youtubeState.queue.push(videoData);
+    renderQueue();
+    
+    // Show queue if it's hidden
+    if (youtubeQueue) {
+        youtubeQueue.style.display = 'block';
+    }
+    
+    // If this is the first item and no current video, set it as current
+    if (youtubeState.queue.length === 1 && !youtubeState.videoId) {
+        playQueueItem(0);
+    }
+}
+
+function renderQueue() {
+    if (!queueList) return;
+    
+    queueList.innerHTML = '';
+    
+    if (youtubeState.queue.length === 0) {
+        queueList.innerHTML = '<div style="padding: 15px; text-align: center; color: var(--text-secondary); font-size: 0.85em;">No tracks in queue</div>';
+        return;
+    }
+    
+    youtubeState.queue.forEach((item, index) => {
+        const queueItem = document.createElement('div');
+        queueItem.className = `queue-item ${index === youtubeState.currentIndex ? 'current' : ''}`;
+        queueItem.innerHTML = `
+            <div class="queue-item-info">
+                <div class="queue-item-title">${item.title}</div>
+                <div class="queue-item-duration">${item.duration || 'Unknown duration'}</div>
+            </div>
+            <div class="queue-item-actions">
+                <button class="queue-item-btn" onclick="playQueueItem(${index})" title="Play">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </button>
+                <button class="queue-item-btn" onclick="removeFromQueue(${index})" title="Remove">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        `;
+        queueList.appendChild(queueItem);
+    });
+}
+
+function playQueueItem(index) {
+    if (index < 0 || index >= youtubeState.queue.length) return;
+    
+    youtubeState.currentIndex = index;
+    const item = youtubeState.queue[index];
+    
+    // Update current video data
+    youtubeState.videoId = item.videoId;
+    youtubeState.title = item.title;
+    youtubeState.currentUrl = item.url;
+    
+    // Update player
+    if (youtubeState.player && youtubeState.isReady) {
+        youtubeState.player.loadVideoById(item.videoId);
+    }
+    
+    // Update UI
+    youtubeTitle.textContent = item.title;
+    renderQueue();
+    saveYoutubeMusic();
+    
+    // Update music indicator
+    updateMusicIndicator(`🎵 ${item.title}`);
+}
+
+function removeFromQueue(index) {
+    if (index < 0 || index >= youtubeState.queue.length) return;
+    
+    youtubeState.queue.splice(index, 1);
+    
+    // Adjust current index if needed
+    if (index < youtubeState.currentIndex) {
+        youtubeState.currentIndex--;
+    } else if (index === youtubeState.currentIndex) {
+        // If we removed the current track, play the next one or stop
+        if (youtubeState.queue.length > 0) {
+            if (youtubeState.currentIndex >= youtubeState.queue.length) {
+                youtubeState.currentIndex = 0;
+            }
+            playQueueItem(youtubeState.currentIndex);
+        } else {
+            // Queue is empty
+            youtubeState.videoId = '';
+            youtubeState.title = '';
+            youtubeState.currentIndex = 0;
+            if (youtubeQueue) {
+                youtubeQueue.style.display = 'none';
+            }
+        }
+    }
+    
+    renderQueue();
+    saveYoutubeMusic();
+}
+
+function shuffleQueue() {
+    if (youtubeState.queue.length <= 1) return;
+    
+    // Fisher-Yates shuffle
+    const currentItem = youtubeState.queue[youtubeState.currentIndex];
+    const otherItems = youtubeState.queue.filter((_, index) => index !== youtubeState.currentIndex);
+    
+    for (let i = otherItems.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [otherItems[i], otherItems[j]] = [otherItems[j], otherItems[i]];
+    }
+    
+    // Put current item first, then shuffled items
+    youtubeState.queue = [currentItem, ...otherItems];
+    youtubeState.currentIndex = 0;
+    youtubeState.isShuffled = !youtubeState.isShuffled;
+    
+    renderQueue();
+    saveYoutubeMusic();
+    
+    if (youtubeState.isShuffled) {
+        shuffleQueueBtn.style.background = 'var(--primary-color)';
+        shuffleQueueBtn.style.color = 'white';
+        showNotification('🔀 Queue shuffled');
+    } else {
+        shuffleQueueBtn.style.background = 'transparent';
+        shuffleQueueBtn.style.color = 'var(--text-secondary)';
+        showNotification('🔀 Shuffle disabled');
+    }
+}
+
+function clearQueue() {
+    youtubeState.queue = [];
+    youtubeState.currentIndex = 0;
+    youtubeState.videoId = '';
+    youtubeState.title = '';
+    youtubeState.isShuffled = false;
+    
+    renderQueue();
+    
+    if (youtubeQueue) {
+        youtubeQueue.style.display = 'none';
+    }
+    
+    // Reset shuffle button
+    if (shuffleQueueBtn) {
+        shuffleQueueBtn.style.background = 'transparent';
+        shuffleQueueBtn.style.color = 'var(--text-secondary)';
+    }
+    
+    saveYoutubeMusic();
+    showNotification('🗑️ Queue cleared');
+}
+
+function playNextTrack() {
+    if (youtubeState.queue.length === 0) return;
+    
+    const nextIndex = (youtubeState.currentIndex + 1) % youtubeState.queue.length;
+    playQueueItem(nextIndex);
+}
+
+function playPreviousTrack() {
+    if (youtubeState.queue.length === 0) return;
+    
+    const prevIndex = youtubeState.currentIndex === 0 
+        ? youtubeState.queue.length - 1 
+        : youtubeState.currentIndex - 1;
+    playQueueItem(prevIndex);
+}
+
+// Make queue functions globally available
+window.playQueueItem = playQueueItem;
+window.removeFromQueue = removeFromQueue;
 
 // Collapsible Settings Functions
 function initializeCollapsibleSections() {
@@ -1764,6 +2017,14 @@ function initializeCollapsibleSections() {
     if (wellnessSettingsContent && wellnessSettingsToggle) {
         wellnessSettingsContent.classList.add('collapsed');
         wellnessSettingsToggle.classList.add('collapsed');
+    }
+    
+    // Collapse YouTube queue by default
+    if (youtubeQueueContent) {
+        youtubeQueueContent.classList.remove('active');
+    }
+    if (youtubeQueueToggle) {
+        youtubeQueueToggle.classList.remove('active');
     }
 }
 
