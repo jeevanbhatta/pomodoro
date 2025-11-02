@@ -680,3 +680,198 @@ body.light-theme .settings-content h3 {
 body.light-theme .setting-group label {
     color: #4a5568;
 }
+
+/* Task Management Styles */
+.task-container {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: 15px;
+    animation: fadeInUp 0.5s ease;
+}
+
+.task-input-section label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    font-size: 0.95em;
+    font-weight: 500;
+}
+
+.task-input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.task-input-group input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid transparent;
+    background: var(--dark-bg);
+    color: var(--text-primary);
+    font-family: 'Poppins', sans-serif;
+    font-size: 1em;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.task-input-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.task-input-group input::placeholder {
+    color: var(--text-secondary);
+}
+
+.task-btn {
+    padding: 12px;
+    border: 2px solid var(--primary-color);
+    background: transparent;
+    color: var(--primary-color);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.task-btn:hover {
+    background: var(--primary-color);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+}
+
+.current-task-display {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(231, 76, 60, 0.1);
+    border: 2px solid var(--primary-color);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.task-label {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 0.9em;
+}
+
+.task-text {
+    color: var(--text-primary);
+    font-size: 1em;
+    flex: 1;
+}
+
+/* Task History Styles */
+.task-history-container {
+    margin-top: 30px;
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: 15px;
+    animation: fadeInUp 0.5s ease;
+}
+
+.task-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.task-history-header h3 {
+    font-size: 1.2em;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.clear-history-btn {
+    padding: 8px;
+    border: 2px solid var(--text-secondary);
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clear-history-btn:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+}
+
+.task-history-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.no-tasks {
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    padding: 20px;
+}
+
+.task-history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    background: var(--dark-bg);
+    border-radius: 10px;
+    border-left: 4px solid var(--primary-color);
+    animation: fadeInUp 0.3s ease;
+}
+
+.task-history-item:last-child {
+    margin-bottom: 0;
+}
+
+.task-history-text {
+    flex: 1;
+    color: var(--text-primary);
+    font-size: 0.95em;
+}
+
+.task-history-time {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.task-history-duration {
+    color: var(--success-color);
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+/* Light theme task styles */
+body.light-theme .task-container,
+body.light-theme .task-history-container {
+    background: #f7fafc;
+}
+
+body.light-theme .task-input-group input,
+body.light-theme .task-history-item {
+    background: #ffffff;
+    color: #2d3748;
+}
+
+body.light-theme .task-text,
+body.light-theme .task-history-text {
+    color: #2d3748;
+}
+
+body.light-theme .task-input-group input::placeholder {
+    color: #a0aec0;
+}

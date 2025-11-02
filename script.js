@@ -22,7 +22,15 @@ let settings = {
     musicTrack: 'lofi',
     volume: 50,
     autoStartBreaks: false,
-    autoStartWork: false
+    autoStartWork: false,
+    taskManagementEnabled: false
+};
+
+// Task Management State
+let taskState = {
+    currentTask: '',
+    taskHistory: [],
+    sessionStartTime: null
 };
 
 // DOM Elements
@@ -44,6 +52,17 @@ const completedSessionsDisplay = document.getElementById('completedSessions');
 const totalFocusTimeDisplay = document.getElementById('totalFocusTime');
 const progressRing = document.querySelector('.progress-ring-circle');
 const notificationSound = document.getElementById('notificationSound');
+
+// Task Management DOM Elements
+const taskContainer = document.getElementById('taskContainer');
+const currentTaskInput = document.getElementById('currentTask');
+const addTaskBtn = document.getElementById('addTaskBtn');
+const clearTaskBtn = document.getElementById('clearTaskBtn');
+const currentTaskDisplay = document.getElementById('currentTaskDisplay');
+const currentTaskText = document.getElementById('currentTaskText');
+const taskHistoryContainer = document.getElementById('taskHistoryContainer');
+const taskHistoryList = document.getElementById('taskHistoryList');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
 // Progress Ring Setup
 const progressRingRadius = 160;
@@ -110,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateProgressRing();
     setupEventListeners();
     loadStats();
+    loadTaskData();
 });
 
 // Event Listeners
@@ -129,6 +149,18 @@ function setupEventListeners() {
     if (settingsToggle) settingsToggle.addEventListener('click', toggleSettings);
     if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings);
     if (timerPresetSelect) timerPresetSelect.addEventListener('change', applyPreset);
+
+    // Task Management Event Listeners
+    if (addTaskBtn) addTaskBtn.addEventListener('click', addCurrentTask);
+    if (clearTaskBtn) clearTaskBtn.addEventListener('click', clearCurrentTask);
+    if (clearHistoryBtn) clearHistoryBtn.addEventListener('click', clearTaskHistory);
+    if (currentTaskInput) {
+        currentTaskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addCurrentTask();
+            }
+        });
+    }
 
     // Settings inputs
     document.getElementById('musicEnabled').addEventListener('change', (e) => {
@@ -171,6 +203,11 @@ function setupEventListeners() {
         }
     });
 
+    document.getElementById('taskManagementEnabled').addEventListener('change', (e) => {
+        settings.taskManagementEnabled = e.target.checked;
+        toggleTaskManagement();
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
@@ -202,6 +239,11 @@ function startTimer() {
     pauseBtn.disabled = false;
     
     timeDisplay.classList.add('pulsing');
+
+    // Track session start time for task management
+    if (settings.taskManagementEnabled && timerState.currentMode === 'work') {
+        taskState.sessionStartTime = new Date();
+    }
 
     if (settings.musicEnabled) {
         playMusic();
@@ -275,6 +317,12 @@ function completeSession() {
         timerState.completedSessions++;
         timerState.totalFocusTime += settings.workDuration;
         saveStats();
+
+        // Save completed task to history if task management is enabled
+        if (settings.taskManagementEnabled && taskState.currentTask && taskState.sessionStartTime) {
+            const sessionDuration = Math.round((new Date() - taskState.sessionStartTime) / 1000 / 60);
+            addTaskToHistory(taskState.currentTask, sessionDuration);
+        }
         
         // Auto-switch to break
         if (timerState.completedSessions % settings.sessionsBeforeLongBreak === 0) {
@@ -421,6 +469,7 @@ function saveSettings() {
     settings.volume = parseInt(document.getElementById('volumeSlider').value);
     settings.autoStartBreaks = document.getElementById('autoStartBreaks').checked;
     settings.autoStartWork = document.getElementById('autoStartWork').checked;
+    settings.taskManagementEnabled = document.getElementById('taskManagementEnabled').checked;
 
     localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
 
@@ -460,6 +509,7 @@ function loadSettings() {
     if (elem('musicControls')) elem('musicControls').style.display = settings.musicEnabled ? 'block' : 'none';
     if (elem('autoStartBreaks')) elem('autoStartBreaks').checked = settings.autoStartBreaks;
     if (elem('autoStartWork')) elem('autoStartWork').checked = settings.autoStartWork;
+    if (elem('taskManagementEnabled')) elem('taskManagementEnabled').checked = settings.taskManagementEnabled;
 
     // Set initial time
     timerState.timeRemaining = settings.workDuration * 60;
@@ -715,4 +765,116 @@ function showNotification(message) {
 // Request notification permission on load
 if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
+}
+
+// Task Management Functions
+function toggleTaskManagement() {
+    if (settings.taskManagementEnabled) {
+        taskContainer.style.display = 'block';
+        taskHistoryContainer.style.display = 'block';
+        updateTaskDisplay();
+        renderTaskHistory();
+    } else {
+        taskContainer.style.display = 'none';
+        taskHistoryContainer.style.display = 'none';
+    }
+}
+
+function addCurrentTask() {
+    const taskText = currentTaskInput.value.trim();
+    if (!taskText) return;
+
+    taskState.currentTask = taskText;
+    currentTaskInput.value = '';
+    updateTaskDisplay();
+    saveTaskData();
+    
+    showNotification(`📝 Task set: ${taskText}`);
+}
+
+function clearCurrentTask() {
+    taskState.currentTask = '';
+    updateTaskDisplay();
+    saveTaskData();
+    
+    showNotification('🗑️ Current task cleared');
+}
+
+function updateTaskDisplay() {
+    if (taskState.currentTask) {
+        currentTaskDisplay.style.display = 'flex';
+        currentTaskText.textContent = taskState.currentTask;
+    } else {
+        currentTaskDisplay.style.display = 'none';
+    }
+}
+
+function addTaskToHistory(taskText, duration) {
+    const taskEntry = {
+        id: Date.now(),
+        task: taskText,
+        completedAt: new Date().toISOString(),
+        duration: duration,
+        sessionType: 'work'
+    };
+
+    taskState.taskHistory.unshift(taskEntry);
+    
+    // Keep only last 50 tasks
+    if (taskState.taskHistory.length > 50) {
+        taskState.taskHistory = taskState.taskHistory.slice(0, 50);
+    }
+
+    renderTaskHistory();
+    saveTaskData();
+}
+
+function renderTaskHistory() {
+    if (!taskHistoryList) return;
+
+    if (taskState.taskHistory.length === 0) {
+        taskHistoryList.innerHTML = '<p class="no-tasks">No completed tasks yet. Start a Pomodoro session!</p>';
+        return;
+    }
+
+    const historyHTML = taskState.taskHistory.map(task => {
+        const date = new Date(task.completedAt);
+        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const dateStr = date.toLocaleDateString();
+        
+        return `
+            <div class="task-history-item">
+                <div class="task-history-text">${task.task}</div>
+                <div class="task-history-time">${dateStr} ${timeStr}</div>
+                <div class="task-history-duration">${task.duration}min</div>
+            </div>
+        `;
+    }).join('');
+
+    taskHistoryList.innerHTML = historyHTML;
+}
+
+function clearTaskHistory() {
+    if (confirm('Are you sure you want to clear all task history?')) {
+        taskState.taskHistory = [];
+        renderTaskHistory();
+        saveTaskData();
+        showNotification('🗑️ Task history cleared');
+    }
+}
+
+function saveTaskData() {
+    localStorage.setItem('pomodoroTaskData', JSON.stringify(taskState));
+}
+
+function loadTaskData() {
+    const saved = localStorage.getItem('pomodoroTaskData');
+    if (saved) {
+        const data = JSON.parse(saved);
+        taskState.currentTask = data.currentTask || '';
+        taskState.taskHistory = data.taskHistory || [];
+    }
+    
+    // Initialize task management display based on settings
+    toggleTaskManagement();
 }

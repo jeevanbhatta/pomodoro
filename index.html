@@ -47,6 +47,32 @@
                 </select>
             </div>
 
+            <!-- Task Management (Optional) -->
+            <div class="task-container" id="taskContainer" style="display: none;">
+                <div class="task-input-section">
+                    <label for="currentTask">What are you working on?</label>
+                    <div class="task-input-group">
+                        <input type="text" id="currentTask" placeholder="Enter your task..." maxlength="100">
+                        <button class="task-btn" id="addTaskBtn" title="Add Task">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </button>
+                        <button class="task-btn" id="clearTaskBtn" title="Clear Task">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="current-task-display" id="currentTaskDisplay" style="display: none;">
+                    <span class="task-label">Current Task:</span>
+                    <span class="task-text" id="currentTaskText"></span>
+                </div>
+            </div>
+
             <!-- Circular Timer Visualization -->
             <div class="timer-container">
                 <svg class="progress-ring" width="350" height="350">
@@ -171,6 +197,15 @@
                         </label>
                     </div>
 
+                    <h3>Productivity Features</h3>
+
+                    <div class="setting-group">
+                        <label>
+                            <input type="checkbox" id="taskManagementEnabled">
+                            Enable Task Management
+                        </label>
+                    </div>
+
                     <h3>Audio Settings</h3>
 
                     <div class="setting-group">
@@ -227,6 +262,22 @@
                 <div class="stat-item">
                     <div class="stat-value" id="totalFocusTime">0h 0m</div>
                     <div class="stat-label">Total Focus Time</div>
+                </div>
+            </div>
+
+            <!-- Task History (Optional) -->
+            <div class="task-history-container" id="taskHistoryContainer" style="display: none;">
+                <div class="task-history-header">
+                    <h3>📋 Task History</h3>
+                    <button class="clear-history-btn" id="clearHistoryBtn" title="Clear History">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="m19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="task-history-list" id="taskHistoryList">
+                    <p class="no-tasks">No completed tasks yet. Start a Pomodoro session!</p>
                 </div>
             </div>
         </main>
