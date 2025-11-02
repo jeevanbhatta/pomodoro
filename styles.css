@@ -1156,10 +1156,11 @@ body.light-theme .progress-bar {
 
 .youtube-section-toggle .toggle-icon {
     transition: transform 0.3s ease;
+    transform: rotate(-90deg); /* Point right when closed */
 }
 
 .youtube-section-toggle.active .toggle-icon {
-    transform: rotate(180deg);
+    transform: rotate(0deg); /* Point down when open */
 }
 
 .youtube-section-content {

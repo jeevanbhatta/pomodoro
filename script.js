@@ -1818,7 +1818,10 @@ function extractPlaylistId(url) {
 }
 
 function isPlaylistUrl(url) {
-    return url.includes('list=') || url.includes('playlist');
+    // Check if it's a playlist URL (not a video with playlist parameter)
+    // Playlist URLs: youtube.com/playlist?list=... or youtube.com/watch?list=... (without v=)
+    return (url.includes('/playlist?list=') || 
+            (url.includes('list=') && !url.includes('v=') && !url.includes('youtu.be/')));
 }
 
 function addToQueue(videoData) {
