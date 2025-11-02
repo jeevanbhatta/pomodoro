@@ -65,11 +65,12 @@ const notificationSound = document.getElementById('notificationSound');
 
 // Task Management DOM Elements
 const taskContainer = document.getElementById('taskContainer');
+const taskInputSection = document.getElementById('taskInputSection');
 const currentTaskInput = document.getElementById('currentTask');
-const addTaskBtn = document.getElementById('addTaskBtn');
-const clearTaskBtn = document.getElementById('clearTaskBtn');
+const setTaskBtn = document.getElementById('setTaskBtn');
 const currentTaskDisplay = document.getElementById('currentTaskDisplay');
 const currentTaskText = document.getElementById('currentTaskText');
+const editTaskBtn = document.getElementById('editTaskBtn');
 const taskHistoryContainer = document.getElementById('taskHistoryContainer');
 const taskHistoryList = document.getElementById('taskHistoryList');
 const clearHistoryBtn = document.getElementById('clearHistoryBtn');
@@ -177,13 +178,13 @@ function setupEventListeners() {
     if (timerPresetSelect) timerPresetSelect.addEventListener('change', applyPreset);
 
     // Task Management Event Listeners
-    if (addTaskBtn) addTaskBtn.addEventListener('click', addCurrentTask);
-    if (clearTaskBtn) clearTaskBtn.addEventListener('click', clearCurrentTask);
+    if (setTaskBtn) setTaskBtn.addEventListener('click', setCurrentTask);
+    if (editTaskBtn) editTaskBtn.addEventListener('click', editCurrentTask);
     if (clearHistoryBtn) clearHistoryBtn.addEventListener('click', clearTaskHistory);
     if (currentTaskInput) {
         currentTaskInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                addCurrentTask();
+                setCurrentTask();
             }
         });
     }
@@ -891,7 +892,7 @@ function toggleTaskManagement() {
     }
 }
 
-function addCurrentTask() {
+function setCurrentTask() {
     const taskText = currentTaskInput.value.trim();
     if (!taskText) return;
 
@@ -903,19 +904,28 @@ function addCurrentTask() {
     showNotification(`📝 Task set: ${taskText}`);
 }
 
-function clearCurrentTask() {
-    taskState.currentTask = '';
-    updateTaskDisplay();
-    saveTaskData();
+function editCurrentTask() {
+    // Switch back to input mode with current task pre-filled
+    currentTaskInput.value = taskState.currentTask;
+    taskInputSection.style.display = 'block';
+    currentTaskDisplay.style.display = 'none';
     
-    showNotification('🗑️ Current task cleared');
+    // Focus the input for immediate editing
+    setTimeout(() => {
+        currentTaskInput.focus();
+        currentTaskInput.select();
+    }, 100);
 }
 
 function updateTaskDisplay() {
     if (taskState.currentTask) {
+        // Show current task display, hide input section
+        taskInputSection.style.display = 'none';
         currentTaskDisplay.style.display = 'flex';
         currentTaskText.textContent = taskState.currentTask;
     } else {
+        // Show input section, hide current task display
+        taskInputSection.style.display = 'block';
         currentTaskDisplay.style.display = 'none';
     }
 }

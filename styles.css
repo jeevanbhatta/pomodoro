@@ -309,7 +309,7 @@ main {
 }
 
 .settings-content.active {
-    max-height: 1200px;
+    max-height: 1500px;
     padding-top: 20px;
 }
 
@@ -744,6 +744,38 @@ body.light-theme .setting-group label {
     transform: translateY(-2px);
 }
 
+.task-btn.primary {
+    background: var(--primary-color);
+    color: var(--text-primary);
+    border-color: var(--primary-color);
+}
+
+.task-btn.primary:hover {
+    background: #c0392b;
+    border-color: #c0392b;
+}
+
+.task-edit-btn {
+    padding: 8px;
+    border: 2px solid var(--text-secondary);
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.task-edit-btn:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+}
+
 .current-task-display {
     margin-top: 15px;
     padding: 15px;
@@ -752,7 +784,15 @@ body.light-theme .setting-group label {
     border-radius: 10px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.task-content {
+    display: flex;
+    align-items: center;
     gap: 10px;
+    flex: 1;
 }
 
 .task-label {
@@ -874,6 +914,17 @@ body.light-theme .task-history-text {
 
 body.light-theme .task-input-group input::placeholder {
     color: #a0aec0;
+}
+
+body.light-theme .task-edit-btn {
+    border-color: #a0aec0;
+    color: #a0aec0;
+}
+
+body.light-theme .task-edit-btn:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
 }
 
 /* Custom Music Upload Styles */
