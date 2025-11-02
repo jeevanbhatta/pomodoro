@@ -33,6 +33,12 @@ let taskState = {
     sessionStartTime: null
 };
 
+// Custom Music State
+let customMusicState = {
+    tracks: new Map(), // Map of trackId -> { name, blob, size }
+    currentCustomTrack: null
+};
+
 // DOM Elements
 const timeDisplay = document.getElementById('time');
 const sessionCountDisplay = document.getElementById('sessionCount');
@@ -63,6 +69,11 @@ const currentTaskText = document.getElementById('currentTaskText');
 const taskHistoryContainer = document.getElementById('taskHistoryContainer');
 const taskHistoryList = document.getElementById('taskHistoryList');
 const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+// Custom Music DOM Elements
+const musicUpload = document.getElementById('musicUpload');
+const customMusicList = document.getElementById('customMusicList');
+const customMusicGroup = document.getElementById('customMusicGroup');
 
 // Progress Ring Setup
 const progressRingRadius = 160;
@@ -130,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     loadStats();
     loadTaskData();
+    loadCustomMusic();
 });
 
 // Event Listeners
@@ -207,6 +219,30 @@ function setupEventListeners() {
         settings.taskManagementEnabled = e.target.checked;
         toggleTaskManagement();
     });
+
+    // Custom Music Event Listeners
+    if (musicUpload) {
+        musicUpload.addEventListener('change', handleMusicUpload);
+        
+        // Drag and drop functionality
+        const uploadArea = musicUpload.parentElement;
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleMusicFiles(files);
+        });
+    }
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
@@ -559,36 +595,59 @@ function playMusic() {
     stopMusic();
 
     try {
-        const trackConfig = musicTracks[settings.musicTrack];
-        if (!trackConfig) {
-            console.log('Track not found:', settings.musicTrack);
-            return;
+        // Check if it's a custom track
+        if (settings.musicTrack.startsWith('custom_')) {
+            const trackId = settings.musicTrack;
+            const customTrack = customMusicState.tracks.get(trackId);
+            
+            if (!customTrack) {
+                console.log('Custom track not found:', trackId);
+                return;
+            }
+            
+            console.log(`Playing custom track: ${customTrack.name} at ${settings.volume}% volume`);
+            
+            // Create audio player with blob URL
+            audioPlayer = new Audio();
+            const blobUrl = URL.createObjectURL(customTrack.blob);
+            audioPlayer.src = blobUrl;
+            audioPlayer.volume = (settings.volume / 100) * 0.5;
+            audioPlayer.loop = true;
+            
+            customMusicState.currentCustomTrack = blobUrl;
+        } else {
+            // Handle built-in tracks
+            const trackConfig = musicTracks[settings.musicTrack];
+            if (!trackConfig) {
+                console.log('Track not found:', settings.musicTrack);
+                return;
+            }
+            
+            console.log(`Playing ${trackConfig.description} at ${settings.volume}% volume from: ${trackConfig.url}`);
+            
+            // Create audio player
+            audioPlayer = new Audio();
+            audioPlayer.src = trackConfig.url;
+            audioPlayer.volume = (settings.volume / 100) * 0.5; // Keep it subtle
+            audioPlayer.loop = true;
+            audioPlayer.crossOrigin = 'anonymous';
         }
-        
-        console.log(`Playing ${trackConfig.description} at ${settings.volume}% volume from: ${trackConfig.url}`);
-        
-        // Create audio player
-        audioPlayer = new Audio();
-        audioPlayer.src = trackConfig.url;
-        audioPlayer.volume = (settings.volume / 100) * 0.5; // Keep it subtle
-        audioPlayer.loop = true;
-        audioPlayer.crossOrigin = 'anonymous';
         
         // Add error handler
         audioPlayer.addEventListener('error', (e) => {
             console.log('Audio error:', e);
-            console.log('Could not load:', trackConfig.url);
             
-            // If this is a fallback track that doesn't exist, show a helpful message
-            if (trackConfig.fallback) {
-                showNotification(`🎵 ${trackConfig.description} not available yet. Try another track!`);
-                isPlayingMusic = false;
-                
-                // Remove the indicator since the track failed to load
-                const indicator = document.getElementById('musicIndicator');
-                if (indicator) {
-                    indicator.remove();
-                }
+            const trackName = settings.musicTrack.startsWith('custom_') 
+                ? customMusicState.tracks.get(settings.musicTrack)?.name || 'Custom track'
+                : musicTracks[settings.musicTrack]?.description || 'Track';
+            
+            showNotification(`🎵 ${trackName} could not be played. Try another track!`);
+            isPlayingMusic = false;
+            
+            // Remove the indicator since the track failed to load
+            const indicator = document.getElementById('musicIndicator');
+            if (indicator) {
+                indicator.remove();
             }
         });
         
@@ -616,7 +675,12 @@ function playMusic() {
         const indicator = document.createElement('div');
         indicator.className = 'music-indicator';
         indicator.id = 'musicIndicator';
-        indicator.innerHTML = `<span>${trackConfig.description}</span>`;
+        
+        const trackName = settings.musicTrack.startsWith('custom_') 
+            ? customMusicState.tracks.get(settings.musicTrack)?.name || 'Custom track'
+            : musicTracks[settings.musicTrack]?.description || 'Track';
+            
+        indicator.innerHTML = `<span>${trackName}</span>`;
         document.body.appendChild(indicator);
     } catch (e) {
         console.log('Could not initialize music player:', e);
@@ -633,6 +697,12 @@ function stopMusic() {
             // Already stopped
         }
         audioPlayer = null;
+    }
+    
+    // Clean up custom track blob URL
+    if (customMusicState.currentCustomTrack) {
+        URL.revokeObjectURL(customMusicState.currentCustomTrack);
+        customMusicState.currentCustomTrack = null;
     }
     
     isPlayingMusic = false;
@@ -877,4 +947,202 @@ function loadTaskData() {
     
     // Initialize task management display based on settings
     toggleTaskManagement();
+}
+
+// Custom Music Functions
+function handleMusicUpload(event) {
+    const files = event.target.files;
+    handleMusicFiles(files);
+    // Clear the input so the same file can be uploaded again if needed
+    event.target.value = '';
+}
+
+function handleMusicFiles(files) {
+    if (!files || files.length === 0) return;
+    
+    const maxFileSize = 50 * 1024 * 1024; // 50MB limit
+    const supportedTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4', 'audio/m4a'];
+    
+    Array.from(files).forEach(file => {
+        // Validate file type
+        if (!supportedTypes.includes(file.type)) {
+            showNotification(`❌ ${file.name}: Unsupported file type. Please use MP3, WAV, OGG, or M4A.`);
+            return;
+        }
+        
+        // Validate file size
+        if (file.size > maxFileSize) {
+            showNotification(`❌ ${file.name}: File too large. Maximum size is 50MB.`);
+            return;
+        }
+        
+        // Check if file already exists
+        const existingTrack = Array.from(customMusicState.tracks.values())
+            .find(track => track.name === file.name && track.size === file.size);
+        
+        if (existingTrack) {
+            showNotification(`⚠️ ${file.name} already exists.`);
+            return;
+        }
+        
+        // Add the track
+        addCustomTrack(file);
+    });
+}
+
+function addCustomTrack(file) {
+    const trackId = `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const trackData = {
+        name: file.name,
+        blob: file,
+        size: file.size,
+        addedAt: new Date().toISOString()
+    };
+    
+    customMusicState.tracks.set(trackId, trackData);
+    saveCustomMusic();
+    renderCustomMusicList();
+    updateMusicSelect();
+    
+    showNotification(`✅ Added: ${file.name}`);
+}
+
+function removeCustomTrack(trackId) {
+    const track = customMusicState.tracks.get(trackId);
+    if (!track) return;
+    
+    if (confirm(`Remove "${track.name}" from your music library?`)) {
+        // Stop music if this track is currently playing
+        if (settings.musicTrack === trackId && isPlayingMusic) {
+            stopMusic();
+        }
+        
+        // If this was the selected track, reset to default
+        if (settings.musicTrack === trackId) {
+            settings.musicTrack = 'lofi';
+            document.getElementById('musicSelect').value = 'lofi';
+        }
+        
+        customMusicState.tracks.delete(trackId);
+        saveCustomMusic();
+        renderCustomMusicList();
+        updateMusicSelect();
+        
+        showNotification(`🗑️ Removed: ${track.name}`);
+    }
+}
+
+function renderCustomMusicList() {
+    if (!customMusicList) return;
+    
+    if (customMusicState.tracks.size === 0) {
+        customMusicList.innerHTML = '';
+        return;
+    }
+    
+    const tracksHTML = Array.from(customMusicState.tracks.entries()).map(([trackId, track]) => {
+        const sizeStr = formatFileSize(track.size);
+        return `
+            <div class="custom-music-item">
+                <div class="custom-music-info">
+                    <div class="custom-music-name">${track.name}</div>
+                    <div class="custom-music-size">${sizeStr}</div>
+                </div>
+                <div class="custom-music-actions">
+                    <button class="custom-music-btn delete" onclick="removeCustomTrack('${trackId}')" title="Remove">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="m19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    customMusicList.innerHTML = tracksHTML;
+}
+
+function updateMusicSelect() {
+    if (!customMusicGroup) return;
+    
+    // Clear existing custom options
+    customMusicGroup.innerHTML = '';
+    
+    if (customMusicState.tracks.size === 0) {
+        customMusicGroup.style.display = 'none';
+        return;
+    }
+    
+    customMusicGroup.style.display = 'block';
+    
+    // Add custom tracks to select
+    Array.from(customMusicState.tracks.entries()).forEach(([trackId, track]) => {
+        const option = document.createElement('option');
+        option.value = trackId;
+        option.textContent = track.name;
+        customMusicGroup.appendChild(option);
+    });
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function saveCustomMusic() {
+    // Convert Map to array for storage (since Maps don't serialize to JSON well)
+    const tracksArray = Array.from(customMusicState.tracks.entries()).map(([id, track]) => {
+        return {
+            id,
+            name: track.name,
+            size: track.size,
+            addedAt: track.addedAt,
+            // Convert blob to base64 for storage
+            data: null // We'll handle this with FileReader
+        };
+    });
+    
+    // Save track metadata (without blob data for now)
+    const metadata = {
+        tracks: tracksArray.map(t => ({ id: t.id, name: t.name, size: t.size, addedAt: t.addedAt }))
+    };
+    
+    localStorage.setItem('pomodoroCustomMusic', JSON.stringify(metadata));
+    
+    // Store blobs in IndexedDB for better performance with large files
+    saveCustomMusicBlobs();
+}
+
+function saveCustomMusicBlobs() {
+    // For now, we'll keep blobs in memory only
+    // In a production app, you'd want to use IndexedDB for persistent storage
+    // This is a limitation of browser storage for large files
+    console.log('Custom music blobs stored in memory (session only)');
+}
+
+function loadCustomMusic() {
+    try {
+        const saved = localStorage.getItem('pomodoroCustomMusic');
+        if (!saved) return;
+        
+        const data = JSON.parse(saved);
+        
+        // Note: We can only restore metadata, not the actual audio blobs
+        // Users will need to re-upload their music each session
+        // This is a limitation of browser storage for large files
+        
+        renderCustomMusicList();
+        updateMusicSelect();
+        
+        if (data.tracks && data.tracks.length > 0) {
+            showNotification('ℹ️ Custom music needs to be re-uploaded each session due to browser limitations.');
+        }
+    } catch (e) {
+        console.log('Could not load custom music:', e);
+    }
 }

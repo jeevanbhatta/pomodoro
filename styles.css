@@ -875,3 +875,185 @@ body.light-theme .task-history-text {
 body.light-theme .task-input-group input::placeholder {
     color: #a0aec0;
 }
+
+/* Custom Music Upload Styles */
+.custom-music-upload {
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--dark-bg);
+    border-radius: 10px;
+    border: 2px dashed var(--text-secondary);
+}
+
+.custom-music-upload label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    font-size: 0.95em;
+    font-weight: 500;
+}
+
+.upload-area {
+    position: relative;
+    padding: 20px;
+    text-align: center;
+    border: 2px dashed var(--primary-color);
+    border-radius: 10px;
+    background: rgba(231, 76, 60, 0.05);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+    background: rgba(231, 76, 60, 0.1);
+    border-color: var(--primary-color);
+}
+
+.upload-area.dragover {
+    background: rgba(231, 76, 60, 0.15);
+    border-color: var(--primary-color);
+    transform: scale(1.02);
+}
+
+.upload-area input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.upload-text span {
+    display: block;
+    color: var(--text-primary);
+    font-size: 1em;
+    margin-bottom: 5px;
+}
+
+.upload-text small {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+}
+
+.custom-music-list {
+    margin-top: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.custom-music-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border-left: 4px solid var(--secondary-color);
+    animation: fadeInUp 0.3s ease;
+}
+
+.custom-music-item:last-child {
+    margin-bottom: 0;
+}
+
+.custom-music-info {
+    flex: 1;
+}
+
+.custom-music-name {
+    color: var(--text-primary);
+    font-size: 0.95em;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.custom-music-size {
+    color: var(--text-secondary);
+    font-size: 0.8em;
+}
+
+.custom-music-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.custom-music-btn {
+    padding: 6px 8px;
+    border: 1px solid var(--text-secondary);
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.8em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-music-btn:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+}
+
+.custom-music-btn.delete:hover {
+    background: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.upload-progress {
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    display: none;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--dark-bg);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-text {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* Light theme custom music styles */
+body.light-theme .custom-music-upload {
+    background: #ffffff;
+    border-color: #e2e8f0;
+}
+
+body.light-theme .custom-music-item {
+    background: #f7fafc;
+}
+
+body.light-theme .custom-music-name {
+    color: #2d3748;
+}
+
+body.light-theme .upload-progress {
+    background: #f7fafc;
+}
+
+body.light-theme .progress-bar {
+    background: #e2e8f0;
+}

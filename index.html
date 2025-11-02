@@ -240,7 +240,22 @@
                                 <option value="midnightForest">Midnight Forest</option>
                                 <option value="himalayan">Himalayan Flute</option>
                             </optgroup>
+                            <optgroup label="Custom Music" id="customMusicGroup" style="display: none;">
+                            </optgroup>
                         </select>
+                        
+                        <div class="custom-music-upload">
+                            <label for="musicUpload">Upload Your Own Music</label>
+                            <div class="upload-area">
+                                <input type="file" id="musicUpload" accept="audio/*" multiple>
+                                <div class="upload-text">
+                                    <span>📁 Choose audio files or drag & drop</span>
+                                    <small>Supports MP3, WAV, OGG, M4A</small>
+                                </div>
+                            </div>
+                            <div class="custom-music-list" id="customMusicList"></div>
+                        </div>
+
                         <div class="volume-control">
                             <label for="volumeSlider">Volume</label>
                             <input type="range" id="volumeSlider" min="0" max="100" value="50">
