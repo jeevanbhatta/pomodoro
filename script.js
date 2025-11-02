@@ -260,9 +260,11 @@ function setupEventListeners() {
         // Update the settings immediately
         settings.musicTrack = e.target.value;
         
-        // If music is enabled and timer is running, switch tracks immediately
+        // Always stop all music first to prevent simultaneous playback
+        stopMusic();
+        
+        // If music is enabled and timer is running, start the new track
         if (settings.musicEnabled && timerState.isRunning) {
-            stopMusic();
             // Use requestAnimationFrame for smoother transition
             requestAnimationFrame(() => {
                 playMusic();
@@ -688,7 +690,16 @@ function playNotificationSound() {
 function playMusic() {
     if (!settings.musicEnabled) return;
 
+    // Always stop all music first to ensure clean state
     stopMusic();
+    
+    // Small delay to ensure cleanup is complete
+    setTimeout(() => {
+        startSelectedMusic();
+    }, 50);
+}
+
+function startSelectedMusic() {
 
     try {
         // Check if it's YouTube player
@@ -822,18 +833,25 @@ function playMusic() {
 }
 
 function stopMusic() {
-    // Stop YouTube player if it's currently selected
-    if (settings.musicTrack === 'youtube' && youtubeState.player && youtubeState.isReady) {
-        youtubeState.player.pauseVideo();
+    // Always stop YouTube player if it exists and is ready, regardless of current track selection
+    if (youtubeState.player && youtubeState.isReady) {
+        try {
+            youtubeState.player.pauseVideo();
+            console.log('YouTube player paused');
+        } catch (e) {
+            console.log('Error pausing YouTube player:', e);
+        }
     }
     
+    // Always stop regular audio player if it exists
     if (audioPlayer) {
         try {
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
             audioPlayer.src = ''; // Clear the source to free memory
+            console.log('Regular audio player stopped');
         } catch (e) {
-            // Already stopped
+            console.log('Error stopping audio player:', e);
         }
         audioPlayer = null;
     }
