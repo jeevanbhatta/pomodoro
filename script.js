@@ -181,6 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTaskData();
     loadCustomMusic();
     loadYoutubeMusic();
+    initializeCollapsibleSections();
 });
 
 // Event Listeners
@@ -200,6 +201,13 @@ function setupEventListeners() {
     if (settingsToggle) settingsToggle.addEventListener('click', toggleSettings);
     if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings);
     if (timerPresetSelect) timerPresetSelect.addEventListener('change', applyPreset);
+
+    // Collapsible settings sections
+    const timerSettingsToggle = document.getElementById('timerSettingsToggle');
+    const wellnessSettingsToggle = document.getElementById('wellnessSettingsToggle');
+    
+    if (timerSettingsToggle) timerSettingsToggle.addEventListener('click', () => toggleSettingsSection('timerSettings'));
+    if (wellnessSettingsToggle) wellnessSettingsToggle.addEventListener('click', () => toggleSettingsSection('wellnessSettings'));
 
     // Task Management Event Listeners
     if (setTaskBtn) setTaskBtn.addEventListener('click', setCurrentTask);
@@ -1683,5 +1691,43 @@ function loadYoutubeMusic() {
         }
     } catch (e) {
         console.log('Could not load YouTube music:', e);
+    }
+}
+
+// Collapsible Settings Functions
+function initializeCollapsibleSections() {
+    // Collapse timer settings and wellness features by default
+    const timerSettingsContent = document.getElementById('timerSettingsContent');
+    const timerSettingsToggle = document.getElementById('timerSettingsToggle');
+    const wellnessSettingsContent = document.getElementById('wellnessSettingsContent');
+    const wellnessSettingsToggle = document.getElementById('wellnessSettingsToggle');
+    
+    if (timerSettingsContent && timerSettingsToggle) {
+        timerSettingsContent.classList.add('collapsed');
+        timerSettingsToggle.classList.add('collapsed');
+    }
+    
+    if (wellnessSettingsContent && wellnessSettingsToggle) {
+        wellnessSettingsContent.classList.add('collapsed');
+        wellnessSettingsToggle.classList.add('collapsed');
+    }
+}
+
+function toggleSettingsSection(sectionName) {
+    const content = document.getElementById(sectionName + 'Content');
+    const toggle = document.getElementById(sectionName + 'Toggle');
+    
+    if (!content || !toggle) return;
+    
+    const isCollapsed = content.classList.contains('collapsed');
+    
+    if (isCollapsed) {
+        // Expand
+        content.classList.remove('collapsed');
+        toggle.classList.remove('collapsed');
+    } else {
+        // Collapse
+        content.classList.add('collapsed');
+        toggle.classList.add('collapsed');
     }
 }

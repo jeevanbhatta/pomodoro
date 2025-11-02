@@ -1470,3 +1470,68 @@ body.light-theme .wellness-tips li {
 body.light-theme .setting-description {
     color: #718096;
 }
+
+/* Collapsible Settings Sections */
+.settings-section {
+    margin-bottom: 20px;
+}
+
+.settings-section-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: var(--card-bg);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: 'Poppins', sans-serif;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+}
+
+.settings-section-toggle:hover {
+    background: rgba(231, 76, 60, 0.1);
+    border-color: var(--primary-color);
+}
+
+.settings-section-toggle span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.settings-section-toggle .toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.settings-section-toggle.collapsed .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.settings-section-content {
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+    padding: 0 10px;
+}
+
+.settings-section-content.collapsed {
+    max-height: 0;
+    padding: 0 10px;
+}
+
+/* Light theme collapsible sections */
+body.light-theme .settings-section-toggle {
+    background: #f7fafc;
+    color: #2d3748;
+}
+
+body.light-theme .settings-section-toggle:hover {
+    background: rgba(231, 76, 60, 0.1);
+    border-color: var(--primary-color);
+}

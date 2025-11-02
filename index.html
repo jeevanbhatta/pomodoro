@@ -165,40 +165,48 @@
                 </button>
 
                 <div class="settings-content" id="settingsContent">
-                    <h3>Timer Settings</h3>
-                    
-                    <div class="setting-group">
-                        <label for="workDuration">Work Duration (minutes)</label>
-                        <input type="number" id="workDuration" min="1" max="60" value="25">
-                    </div>
+                    <div class="settings-section">
+                        <button class="settings-section-toggle" id="timerSettingsToggle">
+                            <span>⏱️ Timer Settings</span>
+                            <svg class="toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="settings-section-content" id="timerSettingsContent">
+                            <div class="setting-group">
+                                <label for="workDuration">Work Duration (minutes)</label>
+                                <input type="number" id="workDuration" min="1" max="60" value="25">
+                            </div>
 
-                    <div class="setting-group">
-                        <label for="breakDuration">Break Duration (minutes)</label>
-                        <input type="number" id="breakDuration" min="1" max="30" value="5">
-                    </div>
+                            <div class="setting-group">
+                                <label for="breakDuration">Break Duration (minutes)</label>
+                                <input type="number" id="breakDuration" min="1" max="30" value="5">
+                            </div>
 
-                    <div class="setting-group">
-                        <label for="longBreakDuration">Long Break Duration (minutes)</label>
-                        <input type="number" id="longBreakDuration" min="1" max="60" value="15">
-                    </div>
+                            <div class="setting-group">
+                                <label for="longBreakDuration">Long Break Duration (minutes)</label>
+                                <input type="number" id="longBreakDuration" min="1" max="60" value="15">
+                            </div>
 
-                    <div class="setting-group">
-                        <label for="sessionsBeforeLongBreak">Sessions Before Long Break</label>
-                        <input type="number" id="sessionsBeforeLongBreak" min="2" max="10" value="4">
-                    </div>
+                            <div class="setting-group">
+                                <label for="sessionsBeforeLongBreak">Sessions Before Long Break</label>
+                                <input type="number" id="sessionsBeforeLongBreak" min="2" max="10" value="4">
+                            </div>
 
-                    <div class="setting-group">
-                        <label>
-                            <input type="checkbox" id="autoStartBreaks">
-                            Auto-start Breaks
-                        </label>
-                    </div>
+                            <div class="setting-group">
+                                <label>
+                                    <input type="checkbox" id="autoStartBreaks">
+                                    Auto-start Breaks
+                                </label>
+                            </div>
 
-                    <div class="setting-group">
-                        <label>
-                            <input type="checkbox" id="autoStartWork">
-                            Auto-start Work Sessions
-                        </label>
+                            <div class="setting-group">
+                                <label>
+                                    <input type="checkbox" id="autoStartWork">
+                                    Auto-start Work Sessions
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     <h3>Productivity Features</h3>
@@ -210,50 +218,58 @@
                         </label>
                     </div>
 
-                    <h3>Wellness Features</h3>
+                    <div class="settings-section">
+                        <button class="settings-section-toggle" id="wellnessSettingsToggle">
+                            <span>🌟 Wellness Features</span>
+                            <svg class="toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="settings-section-content" id="wellnessSettingsContent">
+                            <div class="setting-group">
+                                <label>
+                                    <input type="checkbox" id="eyeRestReminders" checked>
+                                    Eye Rest Reminders
+                                </label>
+                                <small class="setting-description">Get reminded to rest your eyes during breaks</small>
+                            </div>
 
-                    <div class="setting-group">
-                        <label>
-                            <input type="checkbox" id="eyeRestReminders" checked>
-                            Eye Rest Reminders
-                        </label>
-                        <small class="setting-description">Get reminded to rest your eyes during breaks</small>
-                    </div>
+                            <div class="setting-group">
+                                <label>
+                                    <input type="checkbox" id="postureReminders" checked>
+                                    Posture Check Reminders
+                                </label>
+                                <small class="setting-description">Gentle reminders to check your posture</small>
+                            </div>
 
-                    <div class="setting-group">
-                        <label>
-                            <input type="checkbox" id="postureReminders" checked>
-                            Posture Check Reminders
-                        </label>
-                        <small class="setting-description">Gentle reminders to check your posture</small>
-                    </div>
+                            <div class="setting-group">
+                                <label>
+                                    <input type="checkbox" id="hydrationReminders" checked>
+                                    Hydration Reminders
+                                </label>
+                                <small class="setting-description">Stay hydrated with water break reminders</small>
+                            </div>
 
-                    <div class="setting-group">
-                        <label>
-                            <input type="checkbox" id="hydrationReminders" checked>
-                            Hydration Reminders
-                        </label>
-                        <small class="setting-description">Stay hydrated with water break reminders</small>
-                    </div>
+                            <div class="setting-group">
+                                <label for="wellnessFrequency">Wellness Reminder Frequency</label>
+                                <select id="wellnessFrequency">
+                                    <option value="2" selected>Every 2 sessions</option>
+                                    <option value="3">Every 3 sessions</option>
+                                    <option value="4">Every 4 sessions</option>
+                                    <option value="5">Every 5 sessions</option>
+                                </select>
+                            </div>
 
-                    <div class="setting-group">
-                        <label for="wellnessFrequency">Wellness Reminder Frequency</label>
-                        <select id="wellnessFrequency">
-                            <option value="2" selected>Every 2 sessions</option>
-                            <option value="3">Every 3 sessions</option>
-                            <option value="4">Every 4 sessions</option>
-                            <option value="5">Every 5 sessions</option>
-                        </select>
-                    </div>
-
-                    <div class="setting-group">
-                        <label for="wellnessReminderMode">Wellness Reminder Mode</label>
-                        <select id="wellnessReminderMode">
-                            <option value="random" selected>Random (one type per break)</option>
-                            <option value="all">All enabled types</option>
-                            <option value="cycle">Cycle through types</option>
-                        </select>
-                        <small class="setting-description">Choose how wellness reminders are shown</small>
+                            <div class="setting-group">
+                                <label for="wellnessReminderMode">Wellness Reminder Mode</label>
+                                <select id="wellnessReminderMode">
+                                    <option value="random" selected>Random (one type per break)</option>
+                                    <option value="all">All enabled types</option>
+                                    <option value="cycle">Cycle through types</option>
+                                </select>
+                                <small class="setting-description">Choose how wellness reminders are shown</small>
+                            </div>
+                        </div>
                     </div>
 
                     <h3>Audio Settings</h3>
