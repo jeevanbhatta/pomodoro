@@ -23,7 +23,11 @@ let settings = {
     volume: 50,
     autoStartBreaks: false,
     autoStartWork: false,
-    taskManagementEnabled: false
+    taskManagementEnabled: false,
+    eyeRestReminders: false,
+    postureReminders: false,
+    hydrationReminders: false,
+    wellnessFrequency: 3
 };
 
 // Task Management State
@@ -74,6 +78,16 @@ const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 const musicUpload = document.getElementById('musicUpload');
 const customMusicList = document.getElementById('customMusicList');
 const customMusicGroup = document.getElementById('customMusicGroup');
+
+// Wellness DOM Elements
+const wellnessModal = document.getElementById('wellnessModal');
+const wellnessModalTitle = document.getElementById('wellnessModalTitle');
+const wellnessIcon = document.getElementById('wellnessIcon');
+const wellnessMessage = document.getElementById('wellnessMessage');
+const wellnessTips = document.getElementById('wellnessTips');
+const wellnessModalClose = document.getElementById('wellnessModalClose');
+const wellnessSkip = document.getElementById('wellnessSkip');
+const wellnessDone = document.getElementById('wellnessDone');
 
 // Progress Ring Setup
 const progressRingRadius = 160;
@@ -244,6 +258,20 @@ function setupEventListeners() {
         });
     }
 
+    // Wellness Event Listeners
+    if (wellnessModalClose) wellnessModalClose.addEventListener('click', closeWellnessModal);
+    if (wellnessSkip) wellnessSkip.addEventListener('click', closeWellnessModal);
+    if (wellnessDone) wellnessDone.addEventListener('click', closeWellnessModal);
+    
+    // Close modal when clicking outside
+    if (wellnessModal) {
+        wellnessModal.addEventListener('click', (e) => {
+            if (e.target === wellnessModal) {
+                closeWellnessModal();
+            }
+        });
+    }
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
@@ -368,6 +396,11 @@ function completeSession() {
         }
 
         showNotification('🎉 Work session complete! Time for a break.');
+
+        // Check for wellness reminders
+        if (shouldShowWellnessReminder()) {
+            setTimeout(() => showWellnessReminder(), 1000);
+        }
 
         if (settings.autoStartBreaks) {
             showNotification('⏰ Break starting in 3 seconds...');
@@ -506,6 +539,10 @@ function saveSettings() {
     settings.autoStartBreaks = document.getElementById('autoStartBreaks').checked;
     settings.autoStartWork = document.getElementById('autoStartWork').checked;
     settings.taskManagementEnabled = document.getElementById('taskManagementEnabled').checked;
+    settings.eyeRestReminders = document.getElementById('eyeRestReminders').checked;
+    settings.postureReminders = document.getElementById('postureReminders').checked;
+    settings.hydrationReminders = document.getElementById('hydrationReminders').checked;
+    settings.wellnessFrequency = parseInt(document.getElementById('wellnessFrequency').value);
 
     localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
 
@@ -546,6 +583,10 @@ function loadSettings() {
     if (elem('autoStartBreaks')) elem('autoStartBreaks').checked = settings.autoStartBreaks;
     if (elem('autoStartWork')) elem('autoStartWork').checked = settings.autoStartWork;
     if (elem('taskManagementEnabled')) elem('taskManagementEnabled').checked = settings.taskManagementEnabled;
+    if (elem('eyeRestReminders')) elem('eyeRestReminders').checked = settings.eyeRestReminders;
+    if (elem('postureReminders')) elem('postureReminders').checked = settings.postureReminders;
+    if (elem('hydrationReminders')) elem('hydrationReminders').checked = settings.hydrationReminders;
+    if (elem('wellnessFrequency')) elem('wellnessFrequency').value = settings.wellnessFrequency;
 
     // Set initial time
     timerState.timeRemaining = settings.workDuration * 60;
@@ -1144,5 +1185,97 @@ function loadCustomMusic() {
         }
     } catch (e) {
         console.log('Could not load custom music:', e);
+    }
+}
+
+// Wellness Functions
+function shouldShowWellnessReminder() {
+    // Only show during breaks and if any wellness feature is enabled
+    if (timerState.currentMode === 'work') return false;
+    
+    const hasWellnessEnabled = settings.eyeRestReminders || 
+                              settings.postureReminders || 
+                              settings.hydrationReminders;
+    
+    if (!hasWellnessEnabled) return false;
+    
+    // Show based on frequency setting
+    return timerState.completedSessions % settings.wellnessFrequency === 0;
+}
+
+function showWellnessReminder() {
+    const wellnessTypes = [];
+    
+    if (settings.eyeRestReminders) wellnessTypes.push('eye');
+    if (settings.postureReminders) wellnessTypes.push('posture');
+    if (settings.hydrationReminders) wellnessTypes.push('hydration');
+    
+    if (wellnessTypes.length === 0) return;
+    
+    // Randomly select a wellness type
+    const selectedType = wellnessTypes[Math.floor(Math.random() * wellnessTypes.length)];
+    
+    const wellnessData = getWellnessData(selectedType);
+    
+    // Update modal content
+    wellnessModalTitle.textContent = wellnessData.title;
+    wellnessIcon.textContent = wellnessData.icon;
+    wellnessMessage.textContent = wellnessData.message;
+    wellnessTips.innerHTML = `<ul>${wellnessData.tips.map(tip => `<li>${tip}</li>`).join('')}</ul>`;
+    
+    // Show modal
+    wellnessModal.style.display = 'flex';
+    
+    // Auto-close after 30 seconds if user doesn't interact
+    setTimeout(() => {
+        if (wellnessModal.style.display === 'flex') {
+            closeWellnessModal();
+        }
+    }, 30000);
+}
+
+function getWellnessData(type) {
+    const wellnessContent = {
+        eye: {
+            title: '👁️ Eye Rest Break',
+            icon: '👁️',
+            message: 'Time to rest your eyes! Look away from your screen and focus on something 20 feet away for 20 seconds.',
+            tips: [
+                'Follow the 20-20-20 rule: Every 20 minutes, look at something 20 feet away for 20 seconds',
+                'Blink frequently to keep your eyes moist',
+                'Adjust screen brightness to match your surroundings',
+                'Consider using blue light filters in the evening'
+            ]
+        },
+        posture: {
+            title: '🧘 Posture Check',
+            icon: '🧘',
+            message: 'Time for a posture check! Sit up straight, relax your shoulders, and align your head over your spine.',
+            tips: [
+                'Keep your feet flat on the floor',
+                'Adjust your chair height so your elbows are at 90 degrees',
+                'Position your monitor at eye level',
+                'Take micro-breaks to stretch your neck and shoulders'
+            ]
+        },
+        hydration: {
+            title: '💧 Hydration Break',
+            icon: '💧',
+            message: 'Stay hydrated! Drink a glass of water to keep your body and mind functioning optimally.',
+            tips: [
+                'Aim for 8 glasses of water per day',
+                'Keep a water bottle at your desk',
+                'Herbal teas count towards your fluid intake',
+                'Listen to your body - thirst is a late indicator of dehydration'
+            ]
+        }
+    };
+    
+    return wellnessContent[type] || wellnessContent.eye;
+}
+
+function closeWellnessModal() {
+    if (wellnessModal) {
+        wellnessModal.style.display = 'none';
     }
 }

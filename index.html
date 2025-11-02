@@ -206,6 +206,42 @@
                         </label>
                     </div>
 
+                    <h3>Wellness Features</h3>
+
+                    <div class="setting-group">
+                        <label>
+                            <input type="checkbox" id="eyeRestReminders">
+                            Eye Rest Reminders
+                        </label>
+                        <small class="setting-description">Get reminded to rest your eyes during breaks</small>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>
+                            <input type="checkbox" id="postureReminders">
+                            Posture Check Reminders
+                        </label>
+                        <small class="setting-description">Gentle reminders to check your posture</small>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>
+                            <input type="checkbox" id="hydrationReminders">
+                            Hydration Reminders
+                        </label>
+                        <small class="setting-description">Stay hydrated with water break reminders</small>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="wellnessFrequency">Wellness Reminder Frequency</label>
+                        <select id="wellnessFrequency">
+                            <option value="2">Every 2 sessions</option>
+                            <option value="3" selected>Every 3 sessions</option>
+                            <option value="4">Every 4 sessions</option>
+                            <option value="5">Every 5 sessions</option>
+                        </select>
+                    </div>
+
                     <h3>Audio Settings</h3>
 
                     <div class="setting-group">
@@ -301,6 +337,33 @@
             <p>Made with ❤️ by Jeevan! </p>
             <p>    Have a productive session!</p>
         </footer>
+    </div>
+
+    <!-- Wellness Reminder Modal -->
+    <div class="wellness-modal" id="wellnessModal" style="display: none;">
+        <div class="wellness-modal-content">
+            <div class="wellness-modal-header">
+                <h3 id="wellnessModalTitle">🌟 Wellness Break</h3>
+                <button class="wellness-modal-close" id="wellnessModalClose">&times;</button>
+            </div>
+            <div class="wellness-modal-body">
+                <div class="wellness-icon" id="wellnessIcon">👁️</div>
+                <div class="wellness-message" id="wellnessMessage">
+                    Time to rest your eyes! Look away from your screen and focus on something 20 feet away for 20 seconds.
+                </div>
+                <div class="wellness-tips" id="wellnessTips">
+                    <ul>
+                        <li>Follow the 20-20-20 rule</li>
+                        <li>Blink frequently to keep eyes moist</li>
+                        <li>Adjust screen brightness to match surroundings</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="wellness-modal-footer">
+                <button class="wellness-btn secondary" id="wellnessSkip">Skip</button>
+                <button class="wellness-btn primary" id="wellnessDone">Done ✓</button>
+            </div>
+        </div>
     </div>
 
     <audio id="notificationSound" preload="auto">

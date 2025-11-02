@@ -1057,3 +1057,207 @@ body.light-theme .upload-progress {
 body.light-theme .progress-bar {
     background: #e2e8f0;
 }
+
+/* Wellness Features Styles */
+.setting-description {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.8em;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+/* Wellness Modal Styles */
+.wellness-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.wellness-modal-content {
+    background: var(--dark-bg);
+    border-radius: 20px;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: slideInUp 0.4s ease;
+}
+
+.wellness-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 30px 20px;
+    border-bottom: 2px solid var(--card-bg);
+}
+
+.wellness-modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.4em;
+    font-weight: 600;
+}
+
+.wellness-modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 2em;
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.wellness-modal-close:hover {
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+.wellness-modal-body {
+    padding: 30px;
+    text-align: center;
+}
+
+.wellness-icon {
+    font-size: 4em;
+    margin-bottom: 20px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.wellness-message {
+    font-size: 1.2em;
+    color: var(--text-primary);
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.wellness-tips {
+    background: var(--card-bg);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.wellness-tips ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.wellness-tips li {
+    color: var(--text-secondary);
+    font-size: 0.95em;
+    margin-bottom: 10px;
+    padding-left: 25px;
+    position: relative;
+}
+
+.wellness-tips li:last-child {
+    margin-bottom: 0;
+}
+
+.wellness-tips li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--success-color);
+    font-weight: bold;
+}
+
+.wellness-modal-footer {
+    padding: 20px 30px 30px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.wellness-btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 50px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 120px;
+}
+
+.wellness-btn.primary {
+    background: var(--success-color);
+    color: var(--text-primary);
+}
+
+.wellness-btn.primary:hover {
+    background: #2ecc71;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+}
+
+.wellness-btn.secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 2px solid var(--text-secondary);
+}
+
+.wellness-btn.secondary:hover {
+    background: var(--text-secondary);
+    color: var(--dark-bg);
+    transform: translateY(-2px);
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Light theme wellness styles */
+body.light-theme .wellness-modal-content {
+    background: #ffffff;
+    color: #2d3748;
+}
+
+body.light-theme .wellness-modal-header {
+    border-bottom-color: #e2e8f0;
+}
+
+body.light-theme .wellness-modal-header h3,
+body.light-theme .wellness-message {
+    color: #2d3748;
+}
+
+body.light-theme .wellness-tips {
+    background: #f7fafc;
+}
+
+body.light-theme .wellness-tips li {
+    color: #4a5568;
+}
+
+body.light-theme .setting-description {
+    color: #718096;
+}
