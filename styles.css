@@ -309,7 +309,7 @@ main {
 }
 
 .settings-content.active {
-    max-height: 2000px;
+    max-height: none;
     padding-top: 20px;
 }
 
