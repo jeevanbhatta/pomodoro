@@ -569,12 +569,22 @@ footer {
     align-items: center;
     gap: 10px;
     box-shadow: var(--shadow);
-    animation: fadeInUp 0.5s ease;
+    animation: fadeInUp 0.3s ease;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    border: 2px solid var(--primary-color);
 }
 
-.music-indicator::before {
-    content: '🎵';
-    animation: pulse 2s ease-in-out infinite;
+.music-indicator:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+}
+
+.music-indicator span {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.9em;
+    transition: opacity 0.15s ease;
 }
 
 .notification {

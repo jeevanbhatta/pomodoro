@@ -182,6 +182,11 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCustomMusic();
     loadYoutubeMusic();
     initializeCollapsibleSections();
+    
+    // Sync music select dropdown with loaded settings
+    setTimeout(() => {
+        syncMusicSelectWithState();
+    }, 100);
 });
 
 // Event Listeners
@@ -251,14 +256,17 @@ function setupEventListeners() {
         }
     });
 
-    document.getElementById('musicSelect').addEventListener('change', () => {
+    document.getElementById('musicSelect').addEventListener('change', (e) => {
         // Update the settings immediately
-        settings.musicTrack = document.getElementById('musicSelect').value;
+        settings.musicTrack = e.target.value;
         
-        // If music is enabled and we have an audio player, switch tracks
-        if (settings.musicEnabled && audioPlayer) {
+        // If music is enabled and timer is running, switch tracks immediately
+        if (settings.musicEnabled && timerState.isRunning) {
             stopMusic();
-            setTimeout(() => playMusic(), 100);
+            // Use requestAnimationFrame for smoother transition
+            requestAnimationFrame(() => {
+                playMusic();
+            });
         }
     });
 
@@ -709,23 +717,26 @@ function playMusic() {
             // Play YouTube video using API
             if (youtubeState.player && youtubeState.isReady) {
                 youtubeState.player.playVideo();
+                isPlayingMusic = true;
+            } else if (youtubeState.player) {
+                // Player exists but not ready, wait for it
+                const checkReady = () => {
+                    if (youtubeState.isReady) {
+                        youtubeState.player.playVideo();
+                        isPlayingMusic = true;
+                    } else {
+                        setTimeout(checkReady, 100);
+                    }
+                };
+                checkReady();
             } else {
-                // Player not ready, show notification
-                showNotification('🎵 YouTube player is loading...');
+                // No player at all, show error
+                showNotification('❌ YouTube player not available. Try refreshing the page.');
+                return;
             }
             
             // Show music indicator for YouTube
-            const existingIndicator = document.getElementById('musicIndicator');
-            if (existingIndicator) {
-                existingIndicator.remove();
-            }
-            
-            const indicator = document.createElement('div');
-            indicator.className = 'music-indicator';
-            indicator.id = 'musicIndicator';
-            indicator.innerHTML = `<span>🎵 ${youtubeState.title}</span>`;
-            document.body.appendChild(indicator);
-            
+            updateMusicIndicator(`🎵 ${youtubeState.title}`);
             return;
         }
         
@@ -799,23 +810,12 @@ function playMusic() {
             isPlayingMusic = true;
         }
 
-        // Remove any existing music indicator first
-        const existingIndicator = document.getElementById('musicIndicator');
-        if (existingIndicator) {
-            existingIndicator.remove();
-        }
-        
-        // Show new music indicator
-        const indicator = document.createElement('div');
-        indicator.className = 'music-indicator';
-        indicator.id = 'musicIndicator';
-        
+        // Show music indicator
         const trackName = settings.musicTrack.startsWith('custom_') 
             ? customMusicState.tracks.get(settings.musicTrack)?.name || 'Custom track'
             : musicTracks[settings.musicTrack]?.description || 'Track';
             
-        indicator.innerHTML = `<span>${trackName}</span>`;
-        document.body.appendChild(indicator);
+        updateMusicIndicator(`🎵 ${trackName}`);
     } catch (e) {
         console.log('Could not initialize music player:', e);
     }
@@ -850,6 +850,38 @@ function stopMusic() {
     const indicator = document.getElementById('musicIndicator');
     if (indicator) {
         indicator.remove();
+    }
+}
+
+// Helper function to update music indicator
+function updateMusicIndicator(text) {
+    const existingIndicator = document.getElementById('musicIndicator');
+    
+    if (existingIndicator) {
+        // Update existing indicator with smooth transition
+        const span = existingIndicator.querySelector('span');
+        if (span) {
+            span.style.opacity = '0';
+            setTimeout(() => {
+                span.textContent = text;
+                span.style.opacity = '1';
+            }, 150);
+        }
+    } else {
+        // Create new indicator
+        const indicator = document.createElement('div');
+        indicator.className = 'music-indicator';
+        indicator.id = 'musicIndicator';
+        indicator.innerHTML = `<span>${text}</span>`;
+        document.body.appendChild(indicator);
+    }
+}
+
+// Helper function to sync music select dropdown with current state
+function syncMusicSelectWithState() {
+    const musicSelect = document.getElementById('musicSelect');
+    if (musicSelect && settings.musicTrack) {
+        musicSelect.value = settings.musicTrack;
     }
 }
 
@@ -1502,11 +1534,13 @@ function addYoutubeMusic() {
                 'loop': 1,
                 'playlist': videoId
             },
-            events: {
-                'onReady': function(event) {
-                    youtubeState.isReady = true;
-                    console.log('YouTube player ready');
-                },
+                events: {
+                    'onReady': function(event) {
+                        youtubeState.isReady = true;
+                        console.log('YouTube player ready');
+                        // Sync music select dropdown
+                        syncMusicSelectWithState();
+                    },
                 'onStateChange': function(event) {
                     // Handle player state changes if needed
                 }
@@ -1654,6 +1688,8 @@ function loadYoutubeMusic() {
                         'onReady': function(event) {
                             youtubeState.isReady = true;
                             console.log('YouTube player ready (loaded from storage)');
+                            // Update music select to reflect YouTube availability
+                            syncMusicSelectWithState();
                         }
                     }
                 });
