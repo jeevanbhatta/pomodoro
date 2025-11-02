@@ -369,11 +369,45 @@ function applyPreset() {
 
     const [work, shortBreak, longBreak] = preset.split('-').map(Number);
     
+    // Update the input fields in settings
     document.getElementById('workDuration').value = work;
     document.getElementById('breakDuration').value = shortBreak;
     document.getElementById('longBreakDuration').value = longBreak;
 
-    showNotification(`✅ Preset applied: ${work}/${shortBreak}/${longBreak} minutes`);
+    // Immediately apply the preset values to the settings object
+    settings.workDuration = work;
+    settings.breakDuration = shortBreak;
+    settings.longBreakDuration = longBreak;
+
+    // Save the updated settings to localStorage
+    localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
+
+    // If timer is running, reset it to apply new durations
+    if (timerState.isRunning) {
+        resetTimer();
+    }
+
+    // Update current timer based on current mode
+    switch (timerState.currentMode) {
+        case 'work':
+            timerState.timeRemaining = settings.workDuration * 60;
+            timerState.totalTime = settings.workDuration * 60;
+            break;
+        case 'break':
+            timerState.timeRemaining = settings.breakDuration * 60;
+            timerState.totalTime = settings.breakDuration * 60;
+            break;
+        case 'long-break':
+            timerState.timeRemaining = settings.longBreakDuration * 60;
+            timerState.totalTime = settings.longBreakDuration * 60;
+            break;
+    }
+
+    // Update the display and progress ring immediately
+    updateDisplay();
+    updateProgressRing();
+
+    showNotification(`✅ Preset applied instantly: ${work}/${shortBreak}/${longBreak} minutes`);
 }
 
 function saveSettings() {
