@@ -27,7 +27,9 @@ let settings = {
     eyeRestReminders: false,
     postureReminders: false,
     hydrationReminders: false,
-    wellnessFrequency: 3
+    wellnessFrequency: 3,
+    wellnessReminderMode: 'random',
+    wellnessReminderCycleIndex: 0
 };
 
 // Task Management State
@@ -544,6 +546,7 @@ function saveSettings() {
     settings.postureReminders = document.getElementById('postureReminders').checked;
     settings.hydrationReminders = document.getElementById('hydrationReminders').checked;
     settings.wellnessFrequency = parseInt(document.getElementById('wellnessFrequency').value);
+    settings.wellnessReminderMode = document.getElementById('wellnessReminderMode').value;
 
     localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
 
@@ -588,6 +591,7 @@ function loadSettings() {
     if (elem('postureReminders')) elem('postureReminders').checked = settings.postureReminders;
     if (elem('hydrationReminders')) elem('hydrationReminders').checked = settings.hydrationReminders;
     if (elem('wellnessFrequency')) elem('wellnessFrequency').value = settings.wellnessFrequency;
+    if (elem('wellnessReminderMode')) elem('wellnessReminderMode').value = settings.wellnessReminderMode;
 
     // Set initial time
     timerState.timeRemaining = settings.workDuration * 60;
@@ -1222,10 +1226,36 @@ function showWellnessReminder() {
     
     if (wellnessTypes.length === 0) return;
     
-    // Randomly select a wellness type
-    const selectedType = wellnessTypes[Math.floor(Math.random() * wellnessTypes.length)];
+    let selectedTypes = [];
     
-    const wellnessData = getWellnessData(selectedType);
+    switch (settings.wellnessReminderMode) {
+        case 'all':
+            selectedTypes = wellnessTypes;
+            break;
+        case 'cycle':
+            // Cycle through types in order
+            const cycleIndex = settings.wellnessReminderCycleIndex % wellnessTypes.length;
+            selectedTypes = [wellnessTypes[cycleIndex]];
+            settings.wellnessReminderCycleIndex = (settings.wellnessReminderCycleIndex + 1) % wellnessTypes.length;
+            // Save the updated cycle index
+            localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
+            break;
+        case 'random':
+        default:
+            // Randomly select one type
+            selectedTypes = [wellnessTypes[Math.floor(Math.random() * wellnessTypes.length)]];
+            break;
+    }
+    
+    if (settings.wellnessReminderMode === 'all') {
+        showCombinedWellnessReminder(selectedTypes);
+    } else {
+        showSingleWellnessReminder(selectedTypes[0]);
+    }
+}
+
+function showSingleWellnessReminder(type) {
+    const wellnessData = getWellnessData(type);
     
     // Update modal content
     wellnessModalTitle.textContent = wellnessData.title;
@@ -1242,6 +1272,44 @@ function showWellnessReminder() {
             closeWellnessModal();
         }
     }, 30000);
+}
+
+function showCombinedWellnessReminder(types) {
+    const allWellnessData = types.map(type => getWellnessData(type));
+    
+    // Combine all wellness types
+    const combinedTitle = '🌟 Wellness Break - Multiple Reminders';
+    const combinedIcon = '🌟';
+    const combinedMessage = 'Time for a comprehensive wellness break! Here are some important reminders for your health:';
+    
+    // Combine all tips
+    const allTips = [];
+    allWellnessData.forEach(data => {
+        allTips.push(`<strong>${data.title.replace(/[🌟👁️🧘💧]\s*/, '')}</strong>`);
+        data.tips.forEach(tip => allTips.push(tip));
+        allTips.push(''); // Add spacing
+    });
+    
+    // Remove last empty item
+    if (allTips[allTips.length - 1] === '') {
+        allTips.pop();
+    }
+    
+    // Update modal content
+    wellnessModalTitle.textContent = combinedTitle;
+    wellnessIcon.textContent = combinedIcon;
+    wellnessMessage.textContent = combinedMessage;
+    wellnessTips.innerHTML = `<ul>${allTips.map(tip => tip === '' ? '<br>' : `<li>${tip}</li>`).join('')}</ul>`;
+    
+    // Show modal
+    wellnessModal.style.display = 'flex';
+    
+    // Auto-close after 45 seconds for combined reminders (more content)
+    setTimeout(() => {
+        if (wellnessModal.style.display === 'flex') {
+            closeWellnessModal();
+        }
+    }, 45000);
 }
 
 function getWellnessData(type) {
